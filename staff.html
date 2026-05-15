@@ -680,8 +680,8 @@ select.form-input { cursor:pointer; -webkit-appearance:none; appearance:none; }
         <div class="home-card-sub">이번 달</div>
       </div>
       <div class="home-cal-card" onclick="switchView('calendar',document.querySelector('[onclick*=calendar]'))">
-        <div class="home-cal-title">📅 이번 주 일정</div>
-        <div id="home-cal-list"><div style="font-size:13px;color:var(--text3);">등록된 일정이 없어요</div></div>
+        <div class="home-cal-title">📅 다가오는 일정</div>
+        <div id="home-cal-list"><div style="font-size:13px;color:var(--text3);">다가오는 일정이 없어요</div></div>
       </div>
     </div>
   </div>
@@ -1184,16 +1184,30 @@ function renderHome() {
     badge.style.display = urgStore > 0 ? 'block' : 'none';
   }
 
-  // 이번 주 일정
+  // 다가오는 일정: 오늘 이후 종료되지 않은 일정 중 가까운 5개 표시
   const calEl = document.getElementById('home-cal-list');
   if(calEl) {
-    const weekEvts = calEvents
-      .filter(e => { const end=e.endDate||e.date; return e.date<=wt&&end>=wf; })
-      .sort((a,b) => a.date.localeCompare(b.date));
-    if(!weekEvts.length) {
-      calEl.innerHTML = '<div style="font-size:13px;color:var(--text3);">이번 주 일정이 없어요</div>';
+    const upcomingEvts = calEvents
+      .filter(e => {
+        const start = normalizeDate(e.date);
+        const end = normalizeDate(e.endDate || e.date) || start;
+        return start && end >= today;
+      })
+      .sort((a,b) => {
+        const aStart = normalizeDate(a.date);
+        const bStart = normalizeDate(b.date);
+        const aEnd = normalizeDate(a.endDate || a.date) || aStart;
+        const bEnd = normalizeDate(b.endDate || b.date) || bStart;
+        // 진행 중인 일정은 오늘 기준으로 정렬하고, 이후 일정은 시작일 기준으로 정렬
+        const aSort = aStart < today && aEnd >= today ? today : aStart;
+        const bSort = bStart < today && bEnd >= today ? today : bStart;
+        return aSort.localeCompare(bSort) || aStart.localeCompare(bStart) || String(a.title||'').localeCompare(String(b.title||''));
+      })
+      .slice(0,5);
+    if(!upcomingEvts.length) {
+      calEl.innerHTML = '<div style="font-size:13px;color:var(--text3);">다가오는 일정이 없어요</div>';
     } else {
-      calEl.innerHTML = weekEvts.map(e => {
+      calEl.innerHTML = upcomingEvts.map(e => {
         const cat = CAL_CATS[e.cat] || CAL_CATS.other;
         const dl = e.endDate&&e.endDate!==e.date ? `${e.date.slice(5)}~${e.endDate.slice(5)}` : e.date.slice(5);
         return `<div class="home-cal-evt">
@@ -1298,7 +1312,9 @@ function delIssue(id) {
   if(!confirm('삭제할까요?')) return;
   issues = issues.filter(i=>i.id!==id);
   save('racement_issues', issues);
+  scheduleAutoSave('issues');
   renderIssues();
+  renderHome();
 }
 
 function renderIssues() {
@@ -1391,7 +1407,9 @@ function delStore(id) {
   if(!confirm('삭제할까요?')) return;
   storeIssues = storeIssues.filter(i=>i.id!==id);
   save('racement_store_issues', storeIssues);
+  scheduleAutoSave('storeIssues');
   renderStore();
+  renderHome();
 }
 
 function renderStore() {
@@ -1463,7 +1481,9 @@ function delReview(id) {
   if(!confirm('삭제할까요?')) return;
   reviewEntries = reviewEntries.filter(e=>e.id!==id);
   save('racement_reviews', reviewEntries);
+  scheduleAutoSave('reviews');
   renderReview();
+  renderHome();
 }
 
 function renderReview() {
@@ -1554,7 +1574,9 @@ function delDiscount(id) {
   if(!confirm('삭제할까요?')) return;
   discountEntries = discountEntries.filter(e=>e.id!==id);
   save('racement_discounts', discountEntries);
+  scheduleAutoSave('discounts');
   renderDiscount();
+  renderHome();
 }
 
 function renderDiscount() {
@@ -1770,7 +1792,12 @@ const _autoTimers={};
 function scheduleAutoSave(key) {
   if(!GS_URL) return;
   clearTimeout(_autoTimers[key]);
-  _autoTimers[key]=setTimeout(()=>{ gsSave(key); delete _autoTimers[key]; },30000);
+  _autoTimers[key]=setTimeout(()=>{
+    gsSave(key)
+      .then(() => { setGsStatus('ok'); })
+      .catch(e => { showToast(`⚠ 자동 저장 실패: ${e.message}`, 5000); })
+      .finally(() => { delete _autoTimers[key]; });
+  },30000);
 }
 
 function toGsRows(key, data) {
@@ -1797,7 +1824,7 @@ function setGsStatus(status) {
 }
 
 async function gsSave(key) {
-  if(!GS_URL) return;
+  if(!GS_URL) throw new Error('GS_URL이 설정되지 않았습니다.');
   const dataMap={
     issues:       issues,
     storeIssues:  storeIssues,
@@ -1806,16 +1833,26 @@ async function gsSave(key) {
     calendar:     calToGsRows(),
   };
   const raw=dataMap[key]||[];
-  if(key!=='calendar'&&raw.length===0) return;
+  // 중요: 데이터가 0건이어도 저장 요청을 보냅니다.
+  // 그래야 삭제 후 구글시트에 예전 데이터가 남아 다시 살아나는 문제를 줄일 수 있습니다.
   const data=key==='calendar'?raw:toGsRows(key,raw);
   try{
     const ctrl=new AbortController();
-    setTimeout(()=>ctrl.abort(),15000);
-    const res=await fetch(GS_URL,{method:'POST',body:JSON.stringify({action:'save',sheet:GS_SHEETS[key],data}),signal:ctrl.signal});
+    const timer=setTimeout(()=>ctrl.abort(),15000);
+    const res=await fetch(GS_URL,{
+      method:'POST',
+      body:JSON.stringify({action:'save',sheet:GS_SHEETS[key],data}),
+      signal:ctrl.signal
+    });
+    clearTimeout(timer);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const result=await res.json();
-    if(result.ok) showToast(`☁ ${GS_SHEETS[key]} 저장 완료`);
+    if(!result.ok) throw new Error(result.message || result.error || 'Apps Script 저장 실패');
+    return { ok:true, key, sheet:GS_SHEETS[key], count:data.length };
   }catch(e){
-    console.warn('GS save error:', e.message);
+    setGsStatus('err');
+    console.warn('GS save error:', key, e.message);
+    throw new Error(`${GS_SHEETS[key]} 저장 실패: ${e.message}`);
   }
 }
 
@@ -1825,8 +1862,9 @@ async function gsLoad(key) {
     const ctrl=new AbortController();
     setTimeout(()=>ctrl.abort(),15000);
     const res=await fetch(GS_URL,{method:'POST',body:JSON.stringify({action:'load',sheet:GS_SHEETS[key]}),signal:ctrl.signal});
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const result=await res.json();
-    if(!result.ok) return;
+    if(!result.ok) throw new Error(result.message || result.error || 'Apps Script 불러오기 실패');
     const data=result.data||[];
     const catRev=Object.fromEntries(Object.entries(CAL_CATS).map(([k,v])=>[v.label,k]));
     switch(key){
@@ -1849,46 +1887,64 @@ async function gsLoad(key) {
         calEvents=parsed.filter(e=>e.date&&e.title);
         save('racement_calendar',calEvents); break;
     }
-  }catch(e){ console.warn('GS load error:', e.message); }
+  }catch(e){
+    setGsStatus('err');
+    console.warn('GS load error:', key, e.message);
+    throw new Error(`${GS_SHEETS[key]} 불러오기 실패: ${e.message}`);
+  }
 }
 
 async function syncAll() {
   // 저장만 실행 (불러오기 없음 - 데이터 덮어쓰기 방지)
   const log = document.getElementById('gs-log');
   if(log) log.textContent = '저장 중...';
-  try {
-    await Promise.allSettled(Object.keys(GS_SHEETS).map(k => gsSave(k)));
-    setGsStatus('ok');
-    showToast('☁ 구글 시트 저장 완료');
-    if(log) log.textContent = '저장됨';
-  } catch(e) {
+
+  const results = await Promise.allSettled(Object.keys(GS_SHEETS).map(k => gsSave(k)));
+  const failed = results
+    .filter(r => r.status === 'rejected')
+    .map(r => r.reason?.message || '알 수 없는 저장 오류');
+
+  if(failed.length) {
     setGsStatus('err');
-    if(log) log.textContent = '저장 실패';
+    if(log) log.textContent = '일부 저장 실패';
+    showToast(`⚠ 저장 실패: ${failed.join(' / ')}`, 5000);
+    return;
   }
+
+  setGsStatus('ok');
+  showToast('☁ 구글 시트 저장 완료');
+  if(log) log.textContent = '저장됨';
 }
 
 async function loadFromGs() {
   // 불러오기 전용 함수
   const log = document.getElementById('gs-log');
   if(log) log.textContent = '불러오는 중...';
-  try {
-    await Promise.allSettled(Object.keys(GS_SHEETS).map(k => gsLoad(k)));
+
+  const results = await Promise.allSettled(Object.keys(GS_SHEETS).map(k => gsLoad(k)));
+  const failed = results
+    .filter(r => r.status === 'rejected')
+    .map(r => r.reason?.message || '알 수 없는 불러오기 오류');
+
+  if(failed.length) {
+    setGsStatus('err');
+    if(log) log.textContent = '일부 불러오기 실패';
+    showToast(`⚠ 불러오기 실패: ${failed.join(' / ')}`, 5000);
+  } else {
     setGsStatus('ok');
-    renderHome();
-    const cur = document.querySelector('.view.active');
-    if(cur) {
-      const id = cur.id;
-      if(id==='view-issues')   renderIssues();
-      if(id==='view-store')    renderStore();
-      if(id==='view-review')   renderReview();
-      if(id==='view-discount') renderDiscount();
-      if(id==='view-calendar') renderCalendar();
-    }
     showToast('📥 불러오기 완료');
     if(log) log.textContent = '불러옴';
-  } catch(e) {
-    setGsStatus('err');
-    if(log) log.textContent = '불러오기 실패';
+  }
+
+  renderHome();
+  const cur = document.querySelector('.view.active');
+  if(cur) {
+    const id = cur.id;
+    if(id==='view-issues')   renderIssues();
+    if(id==='view-store')    renderStore();
+    if(id==='view-review')   renderReview();
+    if(id==='view-discount') renderDiscount();
+    if(id==='view-calendar') renderCalendar();
   }
 }
 
@@ -1896,7 +1952,8 @@ async function gsPing() {
   try{
     const ctrl=new AbortController();
     setTimeout(()=>ctrl.abort(),8000);
-    await fetch(GS_URL,{method:'POST',body:JSON.stringify({action:'ping'}),signal:ctrl.signal});
+    const res = await fetch(GS_URL,{method:'POST',body:JSON.stringify({action:'ping'}),signal:ctrl.signal});
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
     setGsStatus('ok');
   }catch(e){ setGsStatus('err'); }
 }
