@@ -606,7 +606,8 @@ select.form-input { cursor:pointer; -webkit-appearance:none; appearance:none; }
     </select>
     <span id="gs-log"></span>
     <div class="gs-dot" id="gs-dot"></div>
-    <button class="gs-btn" onclick="syncAll()">☁ 동기화</button>
+    <button class="gs-btn" onclick="syncAll()">☁ 저장</button>
+    <button class="gs-btn" onclick="loadFromGs()" style="background:var(--surface2);color:var(--text2);border-color:var(--border);">📥 불러오기</button>
   </div>
 </div>
 
@@ -642,8 +643,11 @@ select.form-input { cursor:pointer; -webkit-appearance:none; appearance:none; }
       <span class="nav-label">일정</span>
     </div>
     <div class="nav-sync">
-      <button class="nav-sync-btn" onclick="syncAll()">
-        ☁ 구글 시트 동기화
+      <button class="nav-sync-btn" onclick="syncAll()" style="margin-bottom:6px;">
+        ☁ GS 저장
+      </button>
+      <button class="nav-sync-btn" onclick="loadFromGs()">
+        📥 GS 불러오기
       </button>
     </div>
   </nav>
@@ -1832,23 +1836,43 @@ async function gsLoad(key) {
 }
 
 async function syncAll() {
-  const log=document.getElementById('gs-log');
-  if(log) log.textContent='동기화 중...';
-  try{
-    await Promise.allSettled(Object.keys(GS_SHEETS).map(k=>gsLoad(k)));
+  // 저장만 실행 (불러오기 없음 - 데이터 덮어쓰기 방지)
+  const log = document.getElementById('gs-log');
+  if(log) log.textContent = '저장 중...';
+  try {
+    await Promise.allSettled(Object.keys(GS_SHEETS).map(k => gsSave(k)));
+    setGsStatus('ok');
+    showToast('☁ 구글 시트 저장 완료');
+    if(log) log.textContent = '저장됨';
+  } catch(e) {
+    setGsStatus('err');
+    if(log) log.textContent = '저장 실패';
+  }
+}
+
+async function loadFromGs() {
+  // 불러오기 전용 함수
+  const log = document.getElementById('gs-log');
+  if(log) log.textContent = '불러오는 중...';
+  try {
+    await Promise.allSettled(Object.keys(GS_SHEETS).map(k => gsLoad(k)));
     setGsStatus('ok');
     renderHome();
-    const cur=document.querySelector('.view.active');
-    if(cur){
-      const id=cur.id;
+    const cur = document.querySelector('.view.active');
+    if(cur) {
+      const id = cur.id;
       if(id==='view-issues')   renderIssues();
       if(id==='view-store')    renderStore();
       if(id==='view-review')   renderReview();
       if(id==='view-discount') renderDiscount();
       if(id==='view-calendar') renderCalendar();
     }
-    showToast('☁ 동기화 완료');
-  }catch(e){ setGsStatus('err'); }
+    showToast('📥 불러오기 완료');
+    if(log) log.textContent = '불러옴';
+  } catch(e) {
+    setGsStatus('err');
+    if(log) log.textContent = '불러오기 실패';
+  }
 }
 
 async function gsPing() {
