@@ -1048,6 +1048,17 @@ const fmt = d => {
   return dt.toISOString().split('T')[0];
 };
 
+// 날짜+시간 형식: 2026-05-15 09:30
+const fmtDateTime = d => {
+  if(!d) return '';
+  const dt = d instanceof Date ? d : new Date(d);
+  if(isNaN(dt)) return '';
+  const date = dt.toISOString().split('T')[0];
+  const hours = String(dt.getHours()).padStart(2,'0');
+  const mins  = String(dt.getMinutes()).padStart(2,'0');
+  return `${date} ${hours}:${mins}`;
+};
+
 function normalizeDate(v) {
   if(!v) return '';
   let s = String(v).trim();
@@ -1267,7 +1278,7 @@ function addIssue() {
     tags: [...selTags],
     memo: document.getElementById('iss-memo').value.trim(),
     staff: getStaff(),
-    time: now.toISOString(),
+    time: fmtDateTime(now),
     date: fmt(now),
   });
   save('racement_issues', issues);
@@ -1348,7 +1359,7 @@ function addStoreIssue() {
     title,
     memo: document.getElementById('si-memo').value.trim(),
     staff: getStaff(),
-    createdAt: now.toISOString(),
+    createdAt: fmtDateTime(now),
     done: false,
     doneDate: null,
   });
