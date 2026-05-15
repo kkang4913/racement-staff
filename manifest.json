@@ -1,0 +1,25 @@
+{
+  "name": "RACEMENT 스태프",
+  "short_name": "RACEMENT",
+  "description": "RACEMENT 러닝스페셜티 스태프 전용 앱",
+  "start_url": "./staff.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F4F0",
+  "theme_color": "#F5F4F0",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
