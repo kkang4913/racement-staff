@@ -1140,8 +1140,11 @@ function switchView(name, navEl) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const view = document.getElementById('view-'+name);
   if(view) view.classList.add('active');
-  if(navEl) navEl.classList.add('active');
-  if(name==='home')     renderHome();
+  // navEl 자동 탐지 (홈카드에서 호출 시 navEl 없을 수 있음)
+  const nav = navEl || document.querySelector(`.nav-item[onclick*="${name}"]`);
+  if(nav) nav.classList.add('active');
+  // 항상 최신 데이터로 렌더
+  if(name==='home')     { loadAll(); renderHome(); }
   if(name==='issues')   renderIssues();
   if(name==='store')    renderStore();
   if(name==='review')   renderReview();
