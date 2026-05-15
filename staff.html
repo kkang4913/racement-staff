@@ -1781,6 +1781,7 @@ function toGsRows(key, data) {
       let v=item[k];
       if(v===undefined||v===null) v='';
       if(k==='done') v=v?'완료':'미완료';
+      if(k==='urgency') v=v==='urgent'?'긴급':'보통';
       if(Array.isArray(v)) v=v.join(',');
       row[label]=v;
     });
