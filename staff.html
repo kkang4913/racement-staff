@@ -560,7 +560,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 const GS_URL = 'https://script.google.com/macros/s/AKfycbzrVmRwUU2_DJqti1DPEvvdlBhnmofLKIrihJzISj4DZnUtUcB9iJDDSgy4oySaaqXP/exec';
 const GS_SHEETS = {
   issues:'미구매이슈', storeIssues:'매장이슈', reviews:'리뷰트래커',
-  discounts:'제휴할인', calendar:'일정', snsEntries:'SNS유입',
+  discounts:'제휴할인', calendar:'일정_RAW', snsEntries:'SNS유입',
 };
 const GS_COL_MAP = {
   issues:     {id:'고유ID',tags:'이유태그',memo:'메모내용',staff:'담당자',time:'등록일시'},
@@ -1055,11 +1055,83 @@ function toGsRows(key,data){
 
 function setGsStatus(status){const dot=document.getElementById('gs-dot'),log=document.getElementById('gs-log');if(dot)dot.className='gs-dot'+(status==='ok'?' ok':status==='err'?' err':'');if(log)log.textContent=status==='ok'?'연결됨':status==='err'?'오프라인':'';}
 
+// 캘린더 원본 데이터만 뽑기 (일정_RAW용)
+function calToRawRows() {
+  if(!calEvents.length) return [];
+  return calEvents
+    .slice()
+    .sort((a,b)=>a.date.localeCompare(b.date))
+    .map(e=>({
+      '고유ID':    String(e.id),
+      '날짜':      e.date,
+      '종료일':    e.endDate||'',
+      '제목':      e.title,
+      '카테고리':  CAL_CATS[e.cat]?.label||e.cat,
+      '메모':      e.memo||'',
+      'SNS목표':   e.snsGoal||'',
+      'SNS_URL':   e.snsUrl||'',
+    }));
+}
+
+// 캘린더 뷰 (일정_VIEW용 — 주차별 표)
+function calToViewRows() {
+  if(!calEvents.length) return [];
+  const rows=[], days=['일','월','화','수','목','금','토'];
+  const months=[...new Set(calEvents.map(e=>e.date.slice(0,7)))].sort();
+  months.forEach(ym=>{
+    const [y,m]=ym.split('-').map(Number);
+    const lastDay=new Date(y,m,0).getDate(), firstWd=new Date(y,m-1,1).getDay();
+    rows.push({'주차':`📅 ${y}년 ${m}월`,'일':'일','월':'월','화':'화','수':'수','목':'목','금':'금','토':'토'});
+    let d=1, week=1;
+    while(d<=lastDay){
+      const row={'주차':`${week}주차`};
+      for(let wd=0;wd<7;wd++){
+        if(week===1&&wd<firstWd){row[days[wd]]='';continue;}
+        if(d>lastDay){row[days[wd]]='';continue;}
+        const ds=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const evts=calEvents.filter(e=>{const end=e.endDate||e.date;return e.date<=ds&&end>=ds;});
+        row[days[wd]]=evts.length
+          ? `${d}\n`+evts.map(e=>`[${CAL_CATS[e.cat]?.label||e.cat}] ${e.title}`).join('\n')
+          : String(d);
+        d++;
+      }
+      rows.push(row); week++;
+    }
+    rows.push({'주차':'','일':'','월':'','화':'','수':'','목':'','금':'','토':''});
+  });
+  return rows;
+}
+
 async function gsSave(key){
-  if(!GS_URL)throw new Error('GS_URL이 설정되지 않았습니다.');
-  const dataMap={issues,storeIssues,reviews:reviewEntries,discounts:discountEntries,calendar:window.calToGsRows?window.calToGsRows():[],snsEntries};
+  if(!GS_URL) throw new Error('GS_URL이 설정되지 않았습니다.');
+
+  // 일정은 RAW + VIEW 두 시트에 각각 저장
+  if(key==='calendar'){
+    const rawData  = calToRawRows();
+    const viewData = calToViewRows();
+    const saveSheet = async (sheetName, data) => {
+      const ctrl=new AbortController(), timer=setTimeout(()=>ctrl.abort(),15000);
+      const res=await fetch(GS_URL,{method:'POST',body:JSON.stringify({action:'save',sheet:sheetName,data}),signal:ctrl.signal});
+      clearTimeout(timer);
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const result=await res.json();
+      if(!result.ok) throw new Error(result.message||'저장 실패');
+    };
+    try{
+      await saveSheet('일정_RAW',  rawData);
+      await saveSheet('일정_VIEW', viewData);
+      return {ok:true};
+    }catch(e){
+      setGsStatus('err');
+      console.warn('GS calendar save error:', e.message);
+      throw new Error(`일정 저장 실패: ${e.message}`);
+    }
+  }
+
+  // 나머지 데이터 저장
+  const dataMap={issues,storeIssues,reviews:reviewEntries,discounts:discountEntries,snsEntries};
   const raw=dataMap[key]||[];
-  const data=key==='calendar'?raw:toGsRows(key,raw);
+  const data=toGsRows(key,raw);
   try{
     const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),15000);
     const res=await fetch(GS_URL,{method:'POST',body:JSON.stringify({action:'save',sheet:GS_SHEETS[key],data}),signal:ctrl.signal});
@@ -1095,10 +1167,20 @@ async function gsLoad(key){
         snsEntries=data.map(r=>({id:r['고유ID']||Date.now(),date:normalizeDate(r['날짜']||''),eventId:r['이벤트ID']||'',eventTitle:r['이벤트명']||'일반 SNS 유입',total:parseInt(r['유입고객수'])||0,purchase:parseInt(r['구매전환수'])||0,staff:r['담당자']||'',memo:r['메모']||''}));
         save('racement_sns_entries',snsEntries);break;
       case 'calendar':
-        let inRaw=false;const parsed=[];
-        data.forEach(r=>{if((r['주차']||'').includes('▼ 원본 데이터')){inRaw=true;return;}if(!inRaw)return;const date=r['월']||'',title=r['수']||'';if(!date||!title)return;parsed.push({id:r['일']||Date.now(),date:normalizeDate(date),endDate:normalizeDate(r['화']||''),title,cat:catRev[r['목']]||'other',memo:r['금']||''});});
-        if(!parsed.length) data.forEach(r=>{const date=r['날짜']||'',title=r['제목']||'';if(!date||!title)return;parsed.push({id:r['고유ID']||Date.now(),date:normalizeDate(date),endDate:normalizeDate(r['종료일']||''),title,cat:catRev[r['카테고리']]||'other',memo:r['메모']||''});});
-        calEvents=parsed.filter(e=>e.date&&e.title);
+        // 일정_RAW는 순수 원본 데이터만 있음
+        calEvents=data
+          .filter(r=>r['날짜']&&r['제목'])
+          .map(r=>({
+            id:      r['고유ID']||Date.now(),
+            date:    normalizeDate(String(r['날짜']||'')),
+            endDate: normalizeDate(String(r['종료일']||'')),
+            title:   r['제목']||'',
+            cat:     catRev[r['카테고리']]||'other',
+            memo:    r['메모']||'',
+            snsGoal: parseInt(r['SNS목표'])||0,
+            snsUrl:  r['SNS_URL']||'',
+          }))
+          .filter(e=>e.date&&e.title);
         save('racement_calendar',calEvents);break;
     }
   }catch(e){setGsStatus('err');console.warn('GS load error:',key,e.message);throw new Error(`${GS_SHEETS[key]} 불러오기 실패: ${e.message}`);}
