@@ -594,6 +594,10 @@ function normalizeDate(v) {
   if(!v) return ''; let s=String(v).trim();
   if(s==='null'||s==='undefined') return '';
   if(s.includes('T')) s=s.split('T')[0];
+  // 한국어 날짜 형식: "2026년 5월 15일 09:30"
+  const krFull=s.match(/(\d{4})년\s*(\d{1,2})월\s*(\d{1,2})일/);
+  if(krFull) return `${krFull[1]}-${krFull[2].padStart(2,'0')}-${krFull[3].padStart(2,'0')}`;
+  // 점 구분 형식: "2026. 5. 15."
   const kr=s.match(/(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})/);
   if(kr) return `${kr[1]}-${kr[2].padStart(2,'0')}-${kr[3].padStart(2,'0')}`;
   if(s.includes(' ')) s=s.split(' ')[0];
