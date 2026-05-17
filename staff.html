@@ -423,63 +423,54 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
         <div class="view-title">📱 SNS 유입</div>
         <div class="view-kpi-row">
           <div class="view-kpi" style="border-top:2px solid var(--pink);">
-            <div class="view-kpi-val" id="sns-today-count" style="color:var(--pink);">0</div>
+            <div class="view-kpi-val" id="sns-today-inflow" style="color:var(--pink);">0</div>
             <div class="view-kpi-label">오늘 유입</div>
           </div>
           <div class="view-kpi">
-            <div class="view-kpi-val" id="sns-week-count">0</div>
-            <div class="view-kpi-label">이번 주</div>
+            <div class="view-kpi-val" id="sns-today-purchase">0</div>
+            <div class="view-kpi-label">오늘 구매</div>
           </div>
           <div class="view-kpi" style="border-top:2px solid var(--green);">
-            <div class="view-kpi-val" id="sns-convert-rate" style="color:var(--green);">—</div>
-            <div class="view-kpi-label">구매 전환율</div>
+            <div class="view-kpi-val" id="sns-today-amount" style="font-size:15px;color:var(--green);">—</div>
+            <div class="view-kpi-label">오늘 구매금액</div>
           </div>
         </div>
       </div>
       <div class="two-col">
-        <div class="col-form">
-          <div class="sec-title">오늘 유입 입력</div>
-          <div class="form-group">
-            <label class="form-label">관련 이벤트 (선택)</label>
-            <select class="form-input" id="sns-event-select">
-              <option value="">일반 SNS 유입 (이벤트 없음)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">날짜</label>
-            <input class="form-input" type="date" id="sns-date">
-          </div>
-          <div class="input-row" style="margin-bottom:12px;">
-            <div>
-              <label class="form-label">SNS 유입 고객 수</label>
-              <input class="form-input" type="number" id="sns-total" placeholder="0" min="0">
-            </div>
-            <div>
-              <label class="form-label">구매 전환 고객 수</label>
-              <input class="form-input" type="number" id="sns-purchase" placeholder="0" min="0">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">메모 (선택)</label>
-            <input class="form-input" type="text" id="sns-memo" placeholder="특이사항...">
-          </div>
-          <button class="btn-primary" onclick="addSnsEntry()">등록</button>
 
-          <!-- 진행 중인 SNS 이벤트 현황 -->
-          <div style="margin-top:24px;">
-            <div class="sec-title">진행 중인 SNS 이벤트</div>
-            <div id="sns-active-events"></div>
+        <!-- 왼쪽: 진행 중인 이벤트 + 빠른 카운트 -->
+        <div class="col-form">
+          <div class="sec-title">진행 중인 SNS 이벤트</div>
+          <div id="sns-event-cards"></div>
+
+          <!-- 미기록 유입 (이벤트 없이) -->
+          <div style="margin-top:20px;">
+            <div class="sec-title">이벤트 없는 일반 유입</div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;box-shadow:var(--sh);">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                <span style="font-size:13px;font-weight:600;">일반 SNS 유입</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <button class="icon-btn" onclick="quickCount('general','inflow',-1)">−</button>
+                  <span id="general-inflow-count" style="font-family:'Bebas Neue',sans-serif;font-size:22px;min-width:32px;text-align:center;">0</span>
+                  <button class="icon-btn" onclick="quickCount('general','inflow',1)" style="background:var(--pink-l);color:var(--pink);border-color:rgba(225,29,72,.2);">+</button>
+                </div>
+              </div>
+              <button class="btn-primary" onclick="saveSnsEntry('general')" style="font-size:12px;padding:8px;">등록</button>
+            </div>
           </div>
         </div>
+
+        <!-- 오른쪽: 오늘 기록 목록 -->
         <div class="col-list">
-          <div class="sec-title">최근 유입 기록</div>
+          <div class="sec-title">오늘 유입 기록</div>
           <div id="sns-list"></div>
         </div>
+
       </div>
     </div>
   </div>
 
-  <!-- ══ 일정 ══ -->
+<!-- ══ 일정 ══ -->
   <div class="view" id="view-calendar">
     <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
       <div class="view-header">
@@ -567,8 +558,8 @@ const GS_COL_MAP = {
   storeIssues:{id:'고유ID',urgency:'긴급도',title:'이슈제목',memo:'상세내용',staff:'담당자',done:'완료여부',doneDate:'완료일',createdAt:'등록일시'},
   reviews:    {id:'고유ID',date:'날짜',pay:'결제건수',rev:'리뷰건수',rate:'전환율'},
   discounts:  {id:'고유ID',date:'날짜',type:'유형',product:'제품명',original:'정가',rate:'할인율(%)',amount:'할인금액',final:'실결제금액',staff:'담당자'},
-  snsEntries: {id:'고유ID',date:'날짜',eventId:'이벤트ID',eventTitle:'이벤트명',total:'유입고객수',purchase:'구매전환수',staff:'담당자',memo:'메모'},
-};
+  snsEntries: {id:'고유ID',date:'날짜',eventId:'이벤트ID',eventTitle:'이벤트명',inflow:'유입수',purchase:'구매건수',amount:'구매금액',staff:'담당자'},
+};;
 const STAFF_LIST = ['강승호(점장)','신경대','허시현','윤승태','손우형'];
 const ISSUE_TAGS = ['사이즈 없음','원하는 모델 없음','가격 부담','타 채널 저렴','더 생각해보겠다','착화감 불만족'];
 const DISC_TYPES = {
@@ -790,134 +781,186 @@ function renderDiscount(){
 // ══════════════════════════════════════
 // SNS 유입
 // ══════════════════════════════════════
-function getActiveSnsEvents(){
-  const today=fmt(new Date());
-  return calEvents.filter(e=>{
-    if(e.cat!=='sns') return false;
-    const end=e.endDate||e.date;
-    return e.date<=today&&end>=today;
+// ══════════════════════════════════════
+// SNS 유입 (두 단계 방식)
+// ══════════════════════════════════════
+
+// 진행 중인 SNS 이벤트 (일정에서 sns 카테고리, 오늘 기준)
+function getActiveSnsEvents() {
+  const today = fmt(new Date());
+  return calEvents.filter(e => {
+    if(e.cat !== 'sns') return false;
+    const end = e.endDate || e.date;
+    return e.date <= today && end >= today;
   });
 }
 
-function updateSnsEventSelect(){
-  const sel=document.getElementById('sns-event-select');
-  if(!sel) return;
-  const activeEvts=getActiveSnsEvents();
-  const currentVal=sel.value;
-  sel.innerHTML='<option value="">일반 SNS 유입 (이벤트 없음)</option>';
-  activeEvts.forEach(e=>{
-    const opt=document.createElement('option');
-    opt.value=String(e.id);
-    opt.textContent=`${e.title} (${e.date}${e.endDate&&e.endDate!==e.date?'~'+e.endDate:''})`;
-    sel.appendChild(opt);
-  });
-  if(currentVal) sel.value=currentVal;
+// 빠른 카운트 상태 (이벤트ID → {inflow, purchase, amount})
+const snsQuickState = {};
+
+function quickCount(eventId, field, delta) {
+  if(!snsQuickState[eventId]) snsQuickState[eventId] = {inflow:0, purchase:0, amount:0};
+  const state = snsQuickState[eventId];
+  if(field === 'inflow')   state.inflow   = Math.max(0, state.inflow + delta);
+  if(field === 'purchase') state.purchase = Math.max(0, state.purchase + delta);
+  // 카운트 UI 갱신
+  const inflowEl   = document.getElementById(`sns-${eventId}-inflow`);
+  const purchaseEl = document.getElementById(`sns-${eventId}-purchase`);
+  if(inflowEl)   inflowEl.textContent   = state.inflow;
+  if(purchaseEl) purchaseEl.textContent = state.purchase;
 }
 
-function addSnsEntry(){
-  const date=document.getElementById('sns-date').value;
-  const total=parseInt(document.getElementById('sns-total').value)||0;
-  const purchase=parseInt(document.getElementById('sns-purchase').value)||0;
-  const memo=document.getElementById('sns-memo').value.trim();
-  const eventId=document.getElementById('sns-event-select').value;
-  if(!date){showToast('날짜를 선택해주세요');return;}
-  if(total===0){showToast('유입 고객 수를 입력해주세요');return;}
-  if(purchase>total){showToast('구매 전환 수가 유입 수보다 많아요');return;}
-  const evt=calEvents.find(e=>String(e.id)===eventId);
+function saveSnsEntry(eventId) {
+  const state = snsQuickState[eventId] || {inflow:0, purchase:0, amount:0};
+  if(state.inflow === 0) { showToast('유입 수를 먼저 입력해주세요'); return; }
+
+  // 구매금액 입력 받기
+  const amountEl = document.getElementById(`sns-${eventId}-amount`);
+  const amount   = amountEl ? parseInt(amountEl.value.replace(/,/g,''))||0 : 0;
+
+  const evt = eventId === 'general'
+    ? null
+    : calEvents.find(e => String(e.id) === eventId);
+
   snsEntries.push({
-    id:Date.now(),date,
-    eventId:eventId||'',
-    eventTitle:evt?evt.title:'일반 SNS 유입',
-    total,purchase,
-    staff:getStaff(),memo,
+    id:         Date.now(),
+    date:       fmt(new Date()),
+    eventId:    eventId === 'general' ? '' : eventId,
+    eventTitle: evt ? evt.title : '일반 SNS 유입',
+    inflow:     state.inflow,
+    purchase:   state.purchase,
+    amount:     amount,
+    staff:      getStaff(),
   });
-  save('racement_sns_entries',snsEntries);
+
+  save('racement_sns_entries', snsEntries);
   scheduleAutoSave('snsEntries');
-  document.getElementById('sns-total').value='';
-  document.getElementById('sns-purchase').value='';
-  document.getElementById('sns-memo').value='';
+
+  // 상태 초기화
+  snsQuickState[eventId] = {inflow:0, purchase:0, amount:0};
+  if(amountEl) amountEl.value = '';
+
   renderSns();
   renderHome();
   showToast('✅ SNS 유입 등록됨');
 }
 
-function delSnsEntry(id){
-  if(!confirm('삭제할까요?'))return;
-  snsEntries=snsEntries.filter(e=>e.id!==id);
-  save('racement_sns_entries',snsEntries);
+function delSnsEntry(id) {
+  if(!confirm('삭제할까요?')) return;
+  snsEntries = snsEntries.filter(e => e.id !== id);
+  save('racement_sns_entries', snsEntries);
   renderSns();
   renderHome();
 }
 
-function renderSns(){
-  updateSnsEventSelect();
-  const today=fmt(new Date()),{wf,wt}=getTueWeek(new Date());
-  const todayData=snsEntries.filter(e=>getDate(e)===today);
-  const weekData=snsEntries.filter(e=>{const d=getDate(e);return d>=wf&&d<=wt;});
-  const todayTotal=todayData.reduce((s,e)=>s+(e.total||0),0);
-  const weekTotal=weekData.reduce((s,e)=>s+(e.total||0),0);
-  const weekPurchase=weekData.reduce((s,e)=>s+(e.purchase||0),0);
-  const convertRate=weekTotal>0?Math.round(weekPurchase/weekTotal*100):0;
+function renderSns() {
+  const today = fmt(new Date());
+  const todayData = snsEntries.filter(e => getDate(e) === today);
+  const todayInflow   = todayData.reduce((s,e) => s+(e.inflow||0), 0);
+  const todayPurchase = todayData.reduce((s,e) => s+(e.purchase||0), 0);
+  const todayAmount   = todayData.reduce((s,e) => s+(e.amount||0), 0);
 
-  const s=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
-  s('sns-today-count',todayTotal);
-  s('sns-week-count',weekTotal);
-  s('sns-convert-rate',weekTotal>0?convertRate+'%':'—');
+  const s = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  s('sns-today-inflow',   todayInflow);
+  s('sns-today-purchase', todayPurchase);
+  s('sns-today-amount',   todayAmount > 0 ? todayAmount.toLocaleString()+'원' : '—');
+  s('home-sns-count',     todayInflow);
 
-  // 진행 중인 이벤트 현황
-  const activeEvts=getActiveSnsEvents();
-  const activeEl=document.getElementById('sns-active-events');
-  if(activeEl){
-    if(!activeEvts.length){
-      activeEl.innerHTML='<div style="font-size:13px;color:var(--text3);padding:12px 0;">진행 중인 SNS 이벤트가 없어요<br><span style="font-size:11px;">일정 탭에서 SNS 이벤트를 등록하세요</span></div>';
+  // 진행 중인 이벤트 카드
+  const activeEvts = getActiveSnsEvents();
+  const cardsEl = document.getElementById('sns-event-cards');
+  if(cardsEl) {
+    if(!activeEvts.length) {
+      cardsEl.innerHTML = `<div style="font-size:13px;color:var(--text3);padding:12px 0;">
+        진행 중인 SNS 이벤트가 없어요<br>
+        <span style="font-size:11px;">일정 탭 → SNS 이벤트 카테고리로 등록하세요</span>
+      </div>`;
     } else {
-      activeEl.innerHTML=activeEvts.map(e=>{
-        const evtEntries=snsEntries.filter(en=>en.eventId===String(e.id));
-        const totalInflow=evtEntries.reduce((s,en)=>s+(en.total||0),0);
-        const totalPurchase=evtEntries.reduce((s,en)=>s+(en.purchase||0),0);
-        const goal=e.snsGoal||0;
-        const progress=goal>0?Math.min(100,Math.round(totalInflow/goal*100)):0;
-        const cat=CAL_CATS.sns;
-        const instaBtnHtml=e.snsUrl?`<a href="${e.snsUrl}" target="_blank" style="font-size:11px;color:${cat.color};text-decoration:none;font-weight:600;">📸 인스타 보기 →</a>`:'';
-        return`<div class="sns-event-card">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+      cardsEl.innerHTML = activeEvts.map(e => {
+        const state   = snsQuickState[String(e.id)] || {inflow:0, purchase:0, amount:0};
+        const allData = snsEntries.filter(en => en.eventId === String(e.id));
+        const totalInflow   = allData.reduce((s,en) => s+(en.inflow||0), 0);
+        const totalPurchase = allData.reduce((s,en) => s+(en.purchase||0), 0);
+        const totalAmount   = allData.reduce((s,en) => s+(en.amount||0), 0);
+        const goal    = e.snsGoal || 0;
+        const progress = goal > 0 ? Math.min(100, Math.round(totalInflow/goal*100)) : 0;
+        const instaBtnHtml = e.snsUrl
+          ? `<a href="${e.snsUrl}" target="_blank" style="font-size:11px;color:var(--pink);text-decoration:none;font-weight:600;">📸 인스타 보기 →</a>`
+          : '';
+
+        return `<div class="sns-event-card" style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
             <div style="font-size:14px;font-weight:700;">${e.title}</div>
             ${instaBtnHtml}
           </div>
-          <div style="font-size:12px;color:var(--text3);margin-bottom:6px;">
-            📅 ${e.date}${e.endDate&&e.endDate!==e.date?'~'+e.endDate:''} · 유입 ${totalInflow}명 · 구매전환 ${totalPurchase}명
+          <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">
+            📅 ${e.date}${e.endDate&&e.endDate!==e.date?'~'+e.endDate:''} ·
+            누적 유입 ${totalInflow}명 · 구매 ${totalPurchase}건 · ${totalAmount>0?totalAmount.toLocaleString()+'원':'0원'}
           </div>
-          ${goal>0?`
+          ${goal > 0 ? `
           <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px;">
-            <span>목표 ${goal}명 대비</span><span style="color:var(--pink);font-weight:700;">${progress}%</span>
+            <span>목표 ${goal}명 대비</span>
+            <span style="color:var(--pink);font-weight:700;">${progress}%</span>
           </div>
-          <div class="sns-event-progress"><div class="sns-event-progress-bar" style="width:${progress}%;"></div></div>`:''}
+          <div class="sns-event-progress" style="margin-bottom:10px;">
+            <div class="sns-event-progress-bar" style="width:${progress}%;"></div>
+          </div>` : ''}
+
+          <!-- 빠른 카운트 -->
+          <div style="background:var(--surface2);border-radius:var(--r);padding:10px 12px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <span style="font-size:12px;font-weight:600;color:var(--text2);">유입</span>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <button class="icon-btn" onclick="quickCount('${e.id}','inflow',-1)" style="width:26px;height:26px;">−</button>
+                <span id="sns-${e.id}-inflow" style="font-family:'Bebas Neue',sans-serif;font-size:20px;min-width:28px;text-align:center;">${state.inflow}</span>
+                <button class="icon-btn" onclick="quickCount('${e.id}','inflow',1)" style="width:26px;height:26px;background:var(--pink-l);color:var(--pink);border-color:rgba(225,29,72,.2);">+</button>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <span style="font-size:12px;font-weight:600;color:var(--text2);">구매</span>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <button class="icon-btn" onclick="quickCount('${e.id}','purchase',-1)" style="width:26px;height:26px;">−</button>
+                <span id="sns-${e.id}-purchase" style="font-family:'Bebas Neue',sans-serif;font-size:20px;min-width:28px;text-align:center;">${state.purchase}</span>
+                <button class="icon-btn" onclick="quickCount('${e.id}','purchase',1)" style="width:26px;height:26px;background:var(--green-l);color:var(--green);border-color:rgba(22,163,74,.2);">+</button>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+              <span style="font-size:12px;font-weight:600;color:var(--text2);">구매금액</span>
+              <input type="number" id="sns-${e.id}-amount" placeholder="0"
+                style="width:120px;text-align:right;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:5px 8px;font-size:13px;color:var(--text);outline:none;">
+            </div>
+            <button class="btn-primary" onclick="saveSnsEntry('${e.id}')" style="font-size:12px;padding:8px;">등록</button>
+          </div>
         </div>`;
       }).join('');
     }
   }
 
-  // 최근 유입 기록
-  const el=document.getElementById('sns-list');if(!el)return;
-  const recent=[...snsEntries].sort((a,b)=>getDate(b).localeCompare(getDate(a))||b.id-a.id).slice(0,20);
-  const cvtCol=r=>r>=50?'var(--green)':r>=30?'var(--amber)':'var(--red)';
-  el.innerHTML=recent.length?recent.map(e=>{
-    const rate=e.total>0?Math.round(e.purchase/e.total*100):0;
-    return`<div class="item-card">
+  // 오늘 유입 기록 목록
+  const listEl = document.getElementById('sns-list');
+  if(!listEl) return;
+  const todaySorted = [...todayData].sort((a,b) => b.id - a.id);
+  const cvtCol = r => r >= 50 ? 'var(--green)' : r >= 30 ? 'var(--amber)' : 'var(--red)';
+  listEl.innerHTML = todaySorted.length ? todaySorted.map(e => {
+    const rate = e.inflow > 0 ? Math.round(e.purchase/e.inflow*100) : 0;
+    return `<div class="item-card">
       <div class="item-body">
         <div class="item-tags">
-          ${e.eventTitle?`<span class="item-tag pink">${e.eventTitle}</span>`:''}
+          <span class="item-tag pink">${e.eventTitle||'일반 SNS 유입'}</span>
         </div>
-        <div class="item-title">유입 ${e.total}명${e.purchase?` · 구매전환 ${e.purchase}명`:''}</div>
+        <div class="item-title">유입 ${e.inflow||0}명${e.purchase?` · 구매 ${e.purchase}건`:''}</div>
         <div class="item-meta">
-          📅 ${e.date} · 👤 ${e.staff||'미지정'}
-          ${e.purchase?` · 전환율 <span style="color:${cvtCol(rate)};font-weight:700;">${rate}%</span>`:''}
-          ${e.memo?`<br>${e.memo}`:''}
+          👤 ${e.staff||'미지정'}
+          ${e.purchase ? ` · 전환율 <span style="color:${cvtCol(rate)};font-weight:700;">${rate}%</span>` : ''}
+          ${e.amount ? `<br>💰 ${(e.amount).toLocaleString()}원` : ''}
         </div>
       </div>
-      <div class="item-actions"><button class="icon-btn" onclick="delSnsEntry(${e.id})">🗑</button></div>
+      <div class="item-actions">
+        <button class="icon-btn" onclick="delSnsEntry(${e.id})">🗑</button>
+      </div>
     </div>`;
-  }).join(''):`<div class="empty-state"><div class="empty-icon">📱</div><div class="empty-text">등록된 유입 기록이 없어요</div></div>`;
+  }).join('')
+  : `<div class="empty-state"><div class="empty-icon">📱</div><div class="empty-text">오늘 등록된 유입이 없어요</div></div>`;
 }
 
 // ══════════════════════════════════════
@@ -1168,8 +1211,17 @@ async function gsLoad(key){
         discountEntries=data.map(r=>({id:r['고유ID']||Date.now(),date:normalizeDate(r['날짜']||''),type:r['유형']==='런콥 할인'?'runcop':'brand',product:r['제품명']||'',original:parseFloat(r['정가'])||0,rate:parseFloat(r['할인율(%)'])||0,amount:parseFloat(r['할인금액'])||0,final:parseFloat(r['실결제금액'])||0,staff:r['담당자']||''}));
         save('racement_discounts',discountEntries);break;
       case 'snsEntries':
-        snsEntries=data.map(r=>({id:r['고유ID']||Date.now(),date:normalizeDate(r['날짜']||''),eventId:r['이벤트ID']||'',eventTitle:r['이벤트명']||'일반 SNS 유입',total:parseInt(r['유입고객수'])||0,purchase:parseInt(r['구매전환수'])||0,staff:r['담당자']||'',memo:r['메모']||''}));
-        save('racement_sns_entries',snsEntries);break;
+        snsEntries=data.map(r=>({
+          id:         r['고유ID']||Date.now(),
+          date:       normalizeDate(String(r['날짜']||'')),
+          eventId:    r['이벤트ID']||'',
+          eventTitle: r['이벤트명']||'일반 SNS 유입',
+          inflow:     parseInt(r['유입수'])||0,
+          purchase:   parseInt(r['구매건수'])||0,
+          amount:     parseInt(r['구매금액'])||0,
+          staff:      r['담당자']||'',
+        }));
+        save('racement_sns_entries',snsEntries); break;
       case 'calendar':
         // 일정_RAW는 순수 원본 데이터만 있음
         calEvents=data
