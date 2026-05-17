@@ -1528,11 +1528,18 @@ function renderCash() {
     const diffStr = e.base > 0
       ? `<br>기준 ${(e.base||0).toLocaleString()}원 · 차액 <span style="color:${e.diff===0?'var(--green)':'var(--red)'};font-weight:700;">${e.diff>=0?'+':''}${(e.diff||0).toLocaleString()}원</span>`
       : '';
-    // 권종별 장수 (0 제외)
-    const denomStr = DENOMS
+    // 권종별 장수 (0 제외) - 표 형식으로 크게 표시
+    const denomRows = DENOMS
       .filter(d => e[d.key] > 0)
-      .map(d => `${d.label} ${e[d.key]}장`)
-      .join(' · ');
+      .map(d => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);">
+          <span style="font-size:13px;font-weight:600;color:var(--text2);width:56px;">${d.label}</span>
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--text);letter-spacing:1px;">${e[d.key]}장</span>
+          <span style="font-size:13px;font-weight:600;color:var(--text2);text-align:right;min-width:90px;">${(e[d.key]*d.value).toLocaleString()}원</span>
+        </div>`).join('');
+    const denomBlock = denomRows
+      ? `<div style="background:var(--surface2);border-radius:var(--r);padding:8px 12px;margin-top:8px;">${denomRows}</div>`
+      : '';
     return `<div class="item-card">
       <div class="item-body">
         <div class="item-tags">
@@ -1542,9 +1549,9 @@ function renderCash() {
         <div class="item-meta">
           📅 ${e.date} · 👤 ${e.staff||'미지정'}
           ${diffStr}
-          ${denomStr ? `<br><span style="color:var(--text3);">${denomStr}</span>` : ''}
           ${e.memo ? `<br>${e.memo}` : ''}
         </div>
+        ${denomBlock}
       </div>
       <div class="item-actions">
         <button class="icon-btn" onclick="delCash(${e.id})">🗑</button>
