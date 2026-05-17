@@ -164,8 +164,34 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 .empty-state{text-align:center;padding:48px 20px;color:var(--text3);}
 .empty-icon{font-size:36px;margin-bottom:10px;opacity:.5;}
 .empty-text{font-size:13px;}
-#toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--text);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:var(--sh2);opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;}
-#toast.show{opacity:1;transform:translateY(0);}
+#toast{display:none;}
+/* ══ 중앙 팝업 ══ */
+#popup-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,.35);
+  display:none;align-items:center;justify-content:center;
+  animation:fadeIn .15s ease;
+}
+#popup-overlay.show{display:flex;}
+#popup-box{
+  background:var(--surface);border-radius:16px;
+  padding:24px 28px;min-width:260px;max-width:360px;
+  box-shadow:0 20px 60px rgba(0,0,0,.18);
+  text-align:center;
+  animation:popIn .2s cubic-bezier(.34,1.56,.64,1);
+}
+#popup-icon{font-size:36px;margin-bottom:10px;line-height:1;}
+#popup-msg{font-size:15px;font-weight:600;color:var(--text);line-height:1.5;}
+#popup-sub{font-size:12px;color:var(--text3);margin-top:6px;display:none;}
+#popup-close{
+  margin-top:18px;padding:9px 28px;
+  background:var(--accent);color:#fff;
+  border-radius:var(--r);font-size:14px;font-weight:700;
+  border:none;cursor:pointer;transition:all .15s;
+}
+#popup-close:hover{background:#1e40af;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+@keyframes popIn{from{transform:scale(.85);opacity:0;}to{transform:scale(1);opacity:1;}}
 /* ══ 홈 ══ */
 .home-view{flex:1;overflow-y:auto;padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-content:start;}
 .home-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:20px;box-shadow:var(--sh);cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
@@ -203,6 +229,15 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 </head>
 <body>
 <div id="toast"></div>
+<!-- 중앙 팝업 -->
+<div id="popup-overlay" onclick="if(event.target===this)closePopup()">
+  <div id="popup-box">
+    <div id="popup-icon">✅</div>
+    <div id="popup-msg">완료</div>
+    <div id="popup-sub"></div>
+    <button id="popup-close" onclick="closePopup()">확인</button>
+  </div>
+</div>
 
 <!-- 상단 헤더 -->
 <div class="topbar">
@@ -669,8 +704,48 @@ function normalizeDate(v) {
 }
 const getDate = o => o.date || normalizeDate(o.time||o.createdAt||'');
 
-let _toastTimer;
-function showToast(msg,dur=2500){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>el.classList.remove('show'),dur);}
+let _popupTimer;
+function showToast(msg, dur=2500) {
+  // 빠른 알림은 팝업 대신 자동 닫힘 팝업으로
+  showPopup(msg, '', dur < 3000 ? 'auto' : 'manual');
+}
+
+function showPopup(msg, sub='', mode='auto', dur=2200) {
+  const overlay = document.getElementById('popup-overlay');
+  const msgEl   = document.getElementById('popup-msg');
+  const subEl   = document.getElementById('popup-sub');
+  const iconEl  = document.getElementById('popup-icon');
+  if(!overlay) return;
+
+  // 아이콘 자동 선택
+  const icon = msg.includes('✅') ? '✅'
+    : msg.includes('❌')||msg.includes('실패') ? '❌'
+    : msg.includes('⚠')  ? '⚠️'
+    : msg.includes('☁')  ? '☁️'
+    : msg.includes('📥') ? '📥'
+    : msg.includes('🗑')  ? '🗑️'
+    : msg.includes('💰') ? '💰'
+    : 'ℹ️';
+
+  if(iconEl) iconEl.textContent = icon;
+  if(msgEl)  msgEl.textContent  = msg.replace(/^[✅❌⚠️☁️📥🗑️💰ℹ️⚠]\s*/,'');
+  if(subEl)  { subEl.textContent = sub; subEl.style.display = sub ? 'block' : 'none'; }
+
+  overlay.classList.add('show');
+  clearTimeout(_popupTimer);
+
+  if(mode === 'auto') {
+    _popupTimer = setTimeout(() => closePopup(), dur);
+  }
+}
+
+function closePopup() {
+  const overlay = document.getElementById('popup-overlay');
+  if(overlay) overlay.classList.remove('show');
+  clearTimeout(_popupTimer);
+}
+
+
 
 function getTueWeek(ref) {
   const d=new Date(ref),year=d.getFullYear(),month=d.getMonth(),day=d.getDate();
@@ -1337,25 +1412,47 @@ async function gsLoad(key){
 
 async function syncAll(){
   const log=document.getElementById('gs-log');if(log)log.textContent='저장 중...';
+  showPopup('☁️ 저장 중...', '구글 시트에 저장하고 있어요', 'manual');
   const results=await Promise.allSettled(Object.keys(GS_SHEETS).map(k=>gsSave(k)));
   const failed=results.filter(r=>r.status==='rejected').map(r=>r.reason?.message||'오류');
-  if(failed.length){setGsStatus('err');if(log)log.textContent='일부 저장 실패';showToast(`⚠ 저장 실패: ${failed.join(' / ')}`,5000);return;}
-  setGsStatus('ok');showToast('☁ 구글 시트 저장 완료');if(log)log.textContent='저장됨';
+  if(failed.length){
+    setGsStatus('err');if(log)log.textContent='일부 저장 실패';
+    showPopup('❌ 저장 실패', failed.join('\n'), 'manual');
+    return;
+  }
+  setGsStatus('ok');
+  if(log)log.textContent='저장됨';
+  showPopup('✅ 저장 완료', '구글 시트에 모든 데이터가 저장됐어요', 'auto', 2000);
 }
 
 async function loadFromGs(){
   const log=document.getElementById('gs-log');if(log)log.textContent='불러오는 중...';
+  showPopup('📥 불러오는 중...', '구글 시트에서 데이터를 가져오고 있어요', 'manual');
   const results=await Promise.allSettled(Object.keys(GS_SHEETS).map(k=>gsLoad(k)));
   const failed=results.filter(r=>r.status==='rejected').map(r=>r.reason?.message||'오류');
-  if(failed.length){setGsStatus('err');if(log)log.textContent='일부 실패';showToast(`⚠ 불러오기 실패: ${failed.join(' / ')}`,5000);}
-  else{setGsStatus('ok');showToast('📥 불러오기 완료');if(log)log.textContent='불러옴';}
+  if(failed.length){
+    setGsStatus('err');if(log)log.textContent='일부 실패';
+    showPopup('❌ 불러오기 실패', failed.join('\n'), 'manual');
+  } else {
+    setGsStatus('ok');if(log)log.textContent='불러옴';
+    showPopup('✅ 불러오기 완료', '최신 데이터를 가져왔어요', 'auto', 2000);
+  }
   renderHome();
   const cur=document.querySelector('.view.active');
   if(cur){const id=cur.id;if(id==='view-issues')renderIssues();if(id==='view-store')renderStore();if(id==='view-review')renderReview();if(id==='view-discount')renderDiscount();if(id==='view-sns')renderSns();if(id==='view-cash')renderCash();if(id==='view-calendar')renderCalendar();}
 }
 
 async function gsPing(){
-  try{const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),8000);const res=await fetch(GS_URL,{method:'POST',body:JSON.stringify({action:'ping'}),signal:ctrl.signal});if(!res.ok)throw new Error(`HTTP ${res.status}`);setGsStatus('ok');}catch(e){setGsStatus('err');}
+  try{
+    const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),8000);
+    const res=await fetch(GS_URL,{method:'POST',body:JSON.stringify({action:'ping'}),signal:ctrl.signal});
+    if(!res.ok)throw new Error(`HTTP ${res.status}`);
+    setGsStatus('ok');
+    showPopup('✅ 구글 시트 연결됨', '데이터를 불러오려면 📥 불러오기를 눌러주세요', 'auto', 2500);
+  }catch(e){
+    setGsStatus('err');
+    showPopup('❌ 구글 시트 연결 실패', '와이파이 연결을 확인해주세요', 'manual');
+  }
 }
 
 // ══════════════════════════════════════
@@ -1497,9 +1594,12 @@ function saveCash() {
 
   // 차액 알림
   if(entry.base > 0 && entry.diff !== 0) {
-    showToast(`⚠ 차액 ${entry.diff > 0 ? '+' : ''}${entry.diff.toLocaleString()}원 발생!`, 4000);
+    showPopup('⚠️ 차액 발생!',
+      `${cashType} 합계: ${total.toLocaleString()}원\n기준 시재: ${entry.base.toLocaleString()}원\n차액: ${entry.diff > 0 ? '+' : ''}${entry.diff.toLocaleString()}원`,
+      'manual');
   } else {
-    showToast(`✅ ${cashType} 시재 저장됨`);
+    showPopup('✅ ' + cashType + ' 시재 저장됨',
+      `합계 ${total.toLocaleString()}원`, 'auto', 2000);
   }
 
   // 폼 초기화
