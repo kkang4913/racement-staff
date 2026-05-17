@@ -617,7 +617,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 // ══════════════════════════════════════
 // 설정
 // ══════════════════════════════════════
-const GS_URL = 'https://script.google.com/macros/s/AKfycbywwqlzJqZMJuAva9C-A6oUltX_nszXlPhAmyj2jeOTeMlLipyZNiAWE4qMhuxxoORk/exec';
+const GS_URL = 'https://script.google.com/macros/s/AKfycbzrVmRwUU2_DJqti1DPEvvdlBhnmofLKIrihJzISj4DZnUtUcB9iJDDSgy4oySaaqXP/exec';
 const GS_SHEETS = {
   issues:'미구매이슈', storeIssues:'매장이슈', reviews:'리뷰트래커',
   discounts:'제휴할인', calendar:'일정_RAW', snsEntries:'SNS유입',
@@ -1562,10 +1562,12 @@ window.onload=()=>{
 
   loadAll();fillStaff();
 
-  document.getElementById('rv-date').value=fmt(new Date());
-  document.getElementById('disc-date').value=fmt(new Date());
-  document.getElementById('cal-start').value=fmt(new Date());
-  document.getElementById('sns-date').value=fmt(new Date());
+  const rvDate = document.getElementById('rv-date');
+  const discDate = document.getElementById('disc-date');
+  const calStart = document.getElementById('cal-start');
+  if(rvDate)   rvDate.value   = fmt(new Date());
+  if(discDate) discDate.value = fmt(new Date());
+  if(calStart) calStart.value = fmt(new Date());
 
   if(NAVER_REVIEW_URL){const btn=document.getElementById('naver-review-btn');if(btn)btn.href=NAVER_REVIEW_URL;}
 
