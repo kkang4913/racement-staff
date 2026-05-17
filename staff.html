@@ -226,6 +226,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
     <div class="nav-item" onclick="switchView('review',this)"><span class="nav-icon">⭐</span><span class="nav-label">리뷰 트래커</span></div>
     <div class="nav-item" onclick="switchView('discount',this)"><span class="nav-icon">🏷</span><span class="nav-label">제휴 할인</span></div>
     <div class="nav-item" onclick="switchView('sns',this)"><span class="nav-icon">📱</span><span class="nav-label">SNS 유입</span></div>
+    <div class="nav-item" onclick="switchView('cash',this)"><span class="nav-icon">💰</span><span class="nav-label">현금 시재</span></div>
     <div class="nav-divider"></div>
     <div class="nav-item" onclick="switchView('calendar',this)"><span class="nav-icon">📅</span><span class="nav-label">일정</span></div>
     <div class="nav-sync">
@@ -470,6 +471,74 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
     </div>
   </div>
 
+  <!-- ══ 현금 시재 ══ -->
+  <div class="view" id="view-cash">
+    <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+      <div class="view-header">
+        <div class="view-title">💰 현금 시재</div>
+        <div class="view-kpi-row">
+          <div class="view-kpi" style="border-top:2px solid var(--accent);">
+            <div class="view-kpi-val" id="cash-total-display" style="font-size:15px;color:var(--accent);">—</div>
+            <div class="view-kpi-label" id="cash-type-label">합계</div>
+          </div>
+          <div class="view-kpi">
+            <div class="view-kpi-val" id="cash-base-display" style="font-size:15px;">—</div>
+            <div class="view-kpi-label">기준 시재</div>
+          </div>
+          <div class="view-kpi">
+            <div class="view-kpi-val" id="cash-diff-display" style="font-size:15px;">—</div>
+            <div class="view-kpi-label">차액</div>
+          </div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="col-form" style="width:420px;">
+          <div style="display:flex;gap:8px;margin-bottom:20px;">
+            <button id="cash-tab-close" onclick="setCashType('미감',this)"
+              style="flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--accent);background:var(--accent-l);color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;">
+              🌙 미감
+            </button>
+            <button id="cash-tab-open" onclick="setCashType('오픈',this)"
+              style="flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;">
+              ☀️ 오픈
+            </button>
+          </div>
+          <div class="form-group">
+            <label class="form-label">기준 시재 (원)</label>
+            <input class="form-input" type="number" id="cash-base" placeholder="1000000" oninput="calcCash()" style="font-size:15px;font-weight:600;">
+            <div style="font-size:11px;color:var(--text3);margin-top:4px;">전일 미감 합계가 오늘 오픈 기준 시재예요</div>
+          </div>
+          <div class="sec-title">권종별 장수 입력</div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh);margin-bottom:16px;">
+            <div style="display:grid;grid-template-columns:80px 1fr 1fr;background:var(--surface2);border-bottom:1px solid var(--border);padding:8px 14px;">
+              <span style="font-size:11px;font-weight:700;color:var(--text3);">권종</span>
+              <span style="font-size:11px;font-weight:700;color:var(--text3);text-align:center;">장수</span>
+              <span style="font-size:11px;font-weight:700;color:var(--text3);text-align:right;">금액</span>
+            </div>
+            <div id="cash-denom-rows"></div>
+            <div style="display:grid;grid-template-columns:80px 1fr 1fr;padding:10px 14px;background:var(--accent-l);border-top:2px solid var(--accent);">
+              <span style="font-size:13px;font-weight:700;color:var(--accent);">합계</span>
+              <span></span>
+              <span id="cash-total-row" style="font-size:14px;font-weight:700;color:var(--accent);text-align:right;">0원</span>
+            </div>
+          </div>
+          <div id="cash-diff-row" style="padding:10px 14px;border-radius:var(--r);margin-bottom:16px;border:1.5px solid var(--border);display:none;">
+            <div style="font-size:13px;font-weight:700;" id="cash-diff-label">차액: 0원</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">비고 (선택)</label>
+            <input class="form-input" type="text" id="cash-memo" placeholder="특이사항...">
+          </div>
+          <button class="btn-primary" onclick="saveCash()">저장</button>
+        </div>
+        <div class="col-list">
+          <div class="sec-title">최근 시재 기록</div>
+          <div id="cash-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <!-- ══ 일정 ══ -->
   <div class="view" id="view-calendar">
     <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
@@ -552,6 +621,7 @@ const GS_URL = 'https://script.google.com/macros/s/AKfycbzrVmRwUU2_DJqti1DPEvvdl
 const GS_SHEETS = {
   issues:'미구매이슈', storeIssues:'매장이슈', reviews:'리뷰트래커',
   discounts:'제휴할인', calendar:'일정_RAW', snsEntries:'SNS유입',
+  cash:'현금시재',
 };
 const GS_COL_MAP = {
   issues:     {id:'고유ID',tags:'이유태그',memo:'메모내용',staff:'담당자',time:'등록일시'},
@@ -559,6 +629,7 @@ const GS_COL_MAP = {
   reviews:    {id:'고유ID',date:'날짜',pay:'결제건수',rev:'리뷰건수',rate:'전환율'},
   discounts:  {id:'고유ID',date:'날짜',type:'유형',product:'제품명',original:'정가',rate:'할인율(%)',amount:'할인금액',final:'실결제금액',staff:'담당자'},
   snsEntries: {id:'고유ID',date:'날짜',eventId:'이벤트ID',eventTitle:'이벤트명',inflow:'유입수',purchase:'구매건수',amount:'구매금액',staff:'담당자'},
+  cash:       {id:'고유ID',date:'날짜',type:'구분',w50000:'5만',w10000:'1만',w5000:'5천',w1000:'1천',w500:'500원',w100:'100원',w50:'50원',w10:'10원',total:'합계',base:'기준시재',diff:'차액',memo:'비고',staff:'담당자'},
 };;
 const STAFF_LIST = ['강승호(점장)','신경대','허시현','윤승태','손우형'];
 const ISSUE_TAGS = ['사이즈 없음','원하는 모델 없음','가격 부담','타 채널 저렴','더 생각해보겠다','착화감 불만족'];
@@ -635,6 +706,7 @@ function switchView(name,navEl){
   if(name==='review')   renderReview();
   if(name==='discount') renderDiscount();
   if(name==='sns')      renderSns();
+  if(name==='cash')     { renderCashDenomRows(); calcCash(); renderCash(); }
   if(name==='calendar') renderCalendar();
 }
 
@@ -649,6 +721,7 @@ function loadAll(){
   discountEntries=load('racement_discounts');
   calEvents      =load('racement_calendar');
   snsEntries     =load('racement_sns_entries');
+  cashEntries    =load('racement_cash');
 }
 
 // ══════════════════════════════════════
@@ -1176,7 +1249,7 @@ async function gsSave(key){
   }
 
   // 나머지 데이터 저장
-  const dataMap={issues,storeIssues,reviews:reviewEntries,discounts:discountEntries,snsEntries};
+  const dataMap={issues,storeIssues,reviews:reviewEntries,discounts:discountEntries,snsEntries,cash:cashEntries};
   const raw=dataMap[key]||[];
   const data=toGsRows(key,raw);
   try{
@@ -1222,6 +1295,26 @@ async function gsLoad(key){
           staff:      r['담당자']||'',
         }));
         save('racement_sns_entries',snsEntries); break;
+      case 'cash':
+        cashEntries=data.map(r=>({
+          id:    r['고유ID']||Date.now(),
+          date:  normalizeDate(String(r['날짜']||'')),
+          type:  r['구분']||'미감',
+          w50000:parseInt(r['5만'])||0,
+          w10000:parseInt(r['1만'])||0,
+          w5000: parseInt(r['5천'])||0,
+          w1000: parseInt(r['1천'])||0,
+          w500:  parseInt(r['500원'])||0,
+          w100:  parseInt(r['100원'])||0,
+          w50:   parseInt(r['50원'])||0,
+          w10:   parseInt(r['10원'])||0,
+          total: parseInt(r['합계'])||0,
+          base:  parseInt(r['기준시재'])||0,
+          diff:  parseInt(r['차액'])||0,
+          memo:  r['비고']||'',
+          staff: r['담당자']||'',
+        }));
+        save('racement_cash',cashEntries); break;
       case 'calendar':
         // 일정_RAW는 순수 원본 데이터만 있음
         calEvents=data
@@ -1258,7 +1351,7 @@ async function loadFromGs(){
   else{setGsStatus('ok');showToast('📥 불러오기 완료');if(log)log.textContent='불러옴';}
   renderHome();
   const cur=document.querySelector('.view.active');
-  if(cur){const id=cur.id;if(id==='view-issues')renderIssues();if(id==='view-store')renderStore();if(id==='view-review')renderReview();if(id==='view-discount')renderDiscount();if(id==='view-sns')renderSns();if(id==='view-calendar')renderCalendar();}
+  if(cur){const id=cur.id;if(id==='view-issues')renderIssues();if(id==='view-store')renderStore();if(id==='view-review')renderReview();if(id==='view-discount')renderDiscount();if(id==='view-sns')renderSns();if(id==='view-cash')renderCash();if(id==='view-calendar')renderCalendar();}
 }
 
 async function gsPing(){
@@ -1266,8 +1359,202 @@ async function gsPing(){
 }
 
 // ══════════════════════════════════════
-// 초기화
+// 현금 시재
 // ══════════════════════════════════════
+const DENOMS = [
+  { key:'w50000', label:'5만원',  value:50000 },
+  { key:'w10000', label:'1만원',  value:10000 },
+  { key:'w5000',  label:'5천원',  value:5000  },
+  { key:'w1000',  label:'1천원',  value:1000  },
+  { key:'w500',   label:'500원',  value:500   },
+  { key:'w100',   label:'100원',  value:100   },
+  { key:'w50',    label:'50원',   value:50    },
+  { key:'w10',    label:'10원',   value:10    },
+];
+
+let cashType = '미감'; // '미감' or '오픈'
+let cashEntries = [];
+
+function loadCash() { cashEntries = load('racement_cash'); }
+function saveCashLocal() { save('racement_cash', cashEntries); }
+
+function setCashType(type, btn) {
+  cashType = type;
+  // 탭 스타일
+  const closeBtn = document.getElementById('cash-tab-close');
+  const openBtn  = document.getElementById('cash-tab-open');
+  if(closeBtn && openBtn) {
+    closeBtn.style.cssText = type==='미감'
+      ? 'flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--accent);background:var(--accent-l);color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;'
+      : 'flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;';
+    openBtn.style.cssText = type==='오픈'
+      ? 'flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--accent);background:var(--accent-l);color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;'
+      : 'flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;';
+  }
+  const labelEl = document.getElementById('cash-type-label');
+  if(labelEl) labelEl.textContent = type + ' 합계';
+
+  // 오픈일 때 전일 미감 합계를 기준 시재로 자동 입력
+  if(type === '오픈') {
+    const today = fmt(new Date());
+    const yesterday = fmt(new Date(Date.now() - 86400000));
+    const prevClose = cashEntries
+      .filter(e => e.type === '미감' && (getDate(e) === yesterday || getDate(e) === today))
+      .sort((a,b) => b.id - a.id)[0];
+    const baseEl = document.getElementById('cash-base');
+    if(baseEl && prevClose) {
+      baseEl.value = prevClose.total || '';
+      showToast(`전일 미감 ${(prevClose.total||0).toLocaleString()}원을 기준 시재로 설정했어요`);
+    }
+  }
+  calcCash();
+}
+
+function renderCashDenomRows() {
+  const el = document.getElementById('cash-denom-rows');
+  if(!el) return;
+  el.innerHTML = DENOMS.map(d => `
+    <div style="display:grid;grid-template-columns:80px 1fr 1fr;padding:8px 14px;border-bottom:1px solid var(--border);align-items:center;">
+      <span style="font-size:13px;font-weight:600;color:var(--text2);">${d.label}</span>
+      <div style="text-align:center;">
+        <input type="number" id="cash-${d.key}" min="0" placeholder="0"
+          style="width:80px;text-align:center;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r);padding:6px 8px;font-size:14px;font-weight:600;color:var(--text);outline:none;"
+          oninput="calcCash()">
+      </div>
+      <div id="cash-${d.key}-amt" style="font-size:13px;color:var(--text2);text-align:right;">0원</div>
+    </div>
+  `).join('');
+}
+
+function calcCash() {
+  let total = 0;
+  DENOMS.forEach(d => {
+    const qty = parseInt(document.getElementById(`cash-${d.key}`)?.value)||0;
+    const amt = qty * d.value;
+    total += amt;
+    const amtEl = document.getElementById(`cash-${d.key}-amt`);
+    if(amtEl) amtEl.textContent = amt > 0 ? amt.toLocaleString()+'원' : '0원';
+  });
+
+  // 합계 표시
+  const totalRowEl  = document.getElementById('cash-total-row');
+  const totalDispEl = document.getElementById('cash-total-display');
+  if(totalRowEl)  totalRowEl.textContent  = total.toLocaleString()+'원';
+  if(totalDispEl) totalDispEl.textContent = total.toLocaleString()+'원';
+
+  // 차액 계산
+  const base = parseInt(document.getElementById('cash-base')?.value)||0;
+  const baseDispEl = document.getElementById('cash-base-display');
+  if(baseDispEl) baseDispEl.textContent = base > 0 ? base.toLocaleString()+'원' : '—';
+
+  const diffRow  = document.getElementById('cash-diff-row');
+  const diffDisp = document.getElementById('cash-diff-display');
+  const diffLabel = document.getElementById('cash-diff-label');
+
+  if(base > 0) {
+    const diff = total - base;
+    const diffStr = (diff >= 0 ? '+' : '') + diff.toLocaleString() + '원';
+    if(diffDisp)  diffDisp.textContent = diffStr;
+    if(diffLabel) diffLabel.textContent = `차액: ${diffStr}`;
+    if(diffRow)   diffRow.style.display = 'block';
+
+    // 색상
+    const color = diff === 0 ? 'var(--green)' : 'var(--red)';
+    const bg    = diff === 0 ? 'var(--green-l)' : 'var(--red-l)';
+    const border= diff === 0 ? 'rgba(22,163,74,.3)' : 'rgba(220,38,38,.3)';
+    if(diffRow)  { diffRow.style.background = bg; diffRow.style.borderColor = border; }
+    if(diffDisp) diffDisp.style.color = color;
+    if(diffLabel) diffLabel.style.color = color;
+  } else {
+    if(diffRow)  diffRow.style.display = 'none';
+    if(diffDisp) diffDisp.textContent = '—';
+  }
+}
+
+function saveCash() {
+  let total = 0;
+  const entry = {
+    id:   Date.now(),
+    date: fmt(new Date()),
+    type: cashType,
+    memo: document.getElementById('cash-memo')?.value.trim()||'',
+    staff: getStaff(),
+    base: parseInt(document.getElementById('cash-base')?.value)||0,
+  };
+  DENOMS.forEach(d => {
+    const qty = parseInt(document.getElementById(`cash-${d.key}`)?.value)||0;
+    entry[d.key] = qty;
+    total += qty * d.value;
+  });
+  entry.total = total;
+  entry.diff  = total - entry.base;
+
+  if(total === 0) { showToast('장수를 입력해주세요'); return; }
+
+  cashEntries.push(entry);
+  saveCashLocal();
+  scheduleAutoSave('cash');
+
+  // 차액 알림
+  if(entry.base > 0 && entry.diff !== 0) {
+    showToast(`⚠ 차액 ${entry.diff > 0 ? '+' : ''}${entry.diff.toLocaleString()}원 발생!`, 4000);
+  } else {
+    showToast(`✅ ${cashType} 시재 저장됨`);
+  }
+
+  // 폼 초기화
+  DENOMS.forEach(d => {
+    const el = document.getElementById(`cash-${d.key}`);
+    if(el) el.value = '';
+  });
+  const memoEl = document.getElementById('cash-memo');
+  if(memoEl) memoEl.value = '';
+  calcCash();
+  renderCash();
+}
+
+function delCash(id) {
+  if(!confirm('삭제할까요?')) return;
+  cashEntries = cashEntries.filter(e => e.id !== id);
+  saveCashLocal();
+  renderCash();
+}
+
+function renderCash() {
+  const el = document.getElementById('cash-list');
+  if(!el) return;
+  const recent = [...cashEntries].sort((a,b) => b.id - a.id).slice(0, 30);
+  el.innerHTML = recent.length ? recent.map(e => {
+    const diffStr = e.base > 0
+      ? `<br>기준 ${(e.base||0).toLocaleString()}원 · 차액 <span style="color:${e.diff===0?'var(--green)':'var(--red)'};font-weight:700;">${e.diff>=0?'+':''}${(e.diff||0).toLocaleString()}원</span>`
+      : '';
+    // 권종별 장수 (0 제외)
+    const denomStr = DENOMS
+      .filter(d => e[d.key] > 0)
+      .map(d => `${d.label} ${e[d.key]}장`)
+      .join(' · ');
+    return `<div class="item-card">
+      <div class="item-body">
+        <div class="item-tags">
+          <span class="item-tag ${e.type==='미감'?'':'green'}">${e.type==='미감'?'🌙 미감':'☀️ 오픈'}</span>
+        </div>
+        <div class="item-title">${(e.total||0).toLocaleString()}원</div>
+        <div class="item-meta">
+          📅 ${e.date} · 👤 ${e.staff||'미지정'}
+          ${diffStr}
+          ${denomStr ? `<br><span style="color:var(--text3);">${denomStr}</span>` : ''}
+          ${e.memo ? `<br>${e.memo}` : ''}
+        </div>
+      </div>
+      <div class="item-actions">
+        <button class="icon-btn" onclick="delCash(${e.id})">🗑</button>
+      </div>
+    </div>`;
+  }).join('')
+  : `<div class="empty-state"><div class="empty-icon">💰</div><div class="empty-text">등록된 시재 기록이 없어요</div></div>`;
+}
+
+
 window.onload=()=>{
   const now=new Date(),days=['일','월','화','수','목','금','토'];
   const dateEl=document.getElementById('top-date');
