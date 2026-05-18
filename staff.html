@@ -557,11 +557,11 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
       </div>
       <div class="two-col">
         <div class="col-form" style="width:420px;">
-          <!-- 미감/오픈 탭 -->
+          <!-- 마감/오픈 탭 -->
           <div style="display:flex;gap:8px;margin-bottom:16px;">
-            <button id="cash-tab-close" onclick="setCashType('미감',this)"
+            <button id="cash-tab-close" onclick="setCashType('마감',this)"
               style="flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--accent);background:var(--accent-l);color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;">
-              🌙 미감
+              🌙 마감
             </button>
             <button id="cash-tab-open" onclick="setCashType('오픈',this)"
               style="flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;">
@@ -1525,7 +1525,7 @@ async function gsLoad(key){
         cashEntries=data.map(r=>({
           id:    r['고유ID']||Date.now(),
           date:  normalizeDate(String(r['날짜']||'')),
-          type:  r['구분']||'미감',
+          type:  r['구분']||'마감',
           w50000:parseInt(r['5만'])||0,
           w10000:parseInt(r['1만'])||0,
           w5000: parseInt(r['5천'])||0,
@@ -1620,7 +1620,7 @@ const DENOMS = [
   { key:'w10',    label:'10원',   value:10    },
 ];
 
-let cashType = '미감'; // '미감' or '오픈'
+let cashType = '마감'; // '마감' or '오픈'
 let cashEntries = [];
 
 function loadCash() { cashEntries = load('racement_cash'); }
@@ -1632,28 +1632,28 @@ function setCashType(type, btn) {
   const openBtn  = document.getElementById('cash-tab-open');
   const activeStyle = 'flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--accent);background:var(--accent-l);color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;';
   const normalStyle = 'flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;';
-  if(closeBtn) closeBtn.style.cssText = type==='미감' ? activeStyle : normalStyle;
+  if(closeBtn) closeBtn.style.cssText = type==='마감' ? activeStyle : normalStyle;
   if(openBtn)  openBtn.style.cssText  = type==='오픈' ? activeStyle : normalStyle;
   const labelEl = document.getElementById('cash-type-label');
   if(labelEl) labelEl.textContent = type + ' 합계';
 
-  // 오픈 선택 시 전일 미감 수량 자동 불러오기 제안
+  // 오픈 선택 시 전일 마감 수량 자동 불러오기 제안
   if(type === '오픈') {
     loadPrevCashQty(true);
   }
   calcCash();
 }
 
-// 전일 수량 불러오기 (최근 7일 내 가장 최근 미감 기준)
+// 전일 수량 불러오기 (최근 7일 내 가장 최근 마감 기준)
 function loadPrevCashQty(silent=false) {
   const today = fmt(new Date());
-  // 오늘 제외하고 가장 최근 미감 찾기 (최대 7일 이내)
+  // 오늘 제외하고 가장 최근 마감 찾기 (최대 7일 이내)
   const prev = cashEntries
-    .filter(e => e.type === '미감' && getDate(e) < today)
+    .filter(e => e.type === '마감' && getDate(e) < today)
     .sort((a,b) => getDate(b).localeCompare(getDate(a)))[0];
 
   if(!prev) {
-    if(!silent) showToast('이전 미감 기록이 없어요');
+    if(!silent) showToast('이전 마감 기록이 없어요');
     return;
   }
   DENOMS.forEach(d => {
@@ -1661,7 +1661,7 @@ function loadPrevCashQty(silent=false) {
     if(el) el.value = prev[d.key] || 0;
   });
   calcCash();
-  if(!silent) showToast(`✅ ${getDate(prev)} 미감 수량을 불러왔어요`);
+  if(!silent) showToast(`✅ ${getDate(prev)} 마감 수량을 불러왔어요`);
 }
 
 // 입금액 계산 (1,000,000원 보관 기준)
@@ -1872,7 +1872,7 @@ function renderCash() {
     return `<div class="item-card">
       <div class="item-body">
         <div class="item-tags">
-          <span class="item-tag ${e.type==='미감'?'':'green'}">${e.type==='미감'?'🌙 미감':'☀️ 오픈'}</span>
+          <span class="item-tag ${e.type==='마감'?'':'green'}">${e.type==='마감'?'🌙 마감':'☀️ 오픈'}</span>
         </div>
         <div class="item-title">${(e.total||0).toLocaleString()}원</div>
         <div class="item-meta">
