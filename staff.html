@@ -278,6 +278,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
         <div class="home-card-name">미구매 이슈</div>
         <div class="home-card-val" id="home-issues-count">0</div>
         <div class="home-card-sub">오늘 등록</div>
+        <div style="margin-top:6px;font-size:12px;color:var(--text3);">이번 달 <span id="home-issues-month" style="font-weight:700;color:var(--accent);">0</span>건</div>
       </div>
       <div class="home-card store" onclick="switchView('store',document.querySelector('[onclick*=store]'))">
         <div class="home-card-icon">🏪</div>
@@ -313,6 +314,10 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
           <div class="view-kpi"><div class="view-kpi-val" id="iss-today">0</div><div class="view-kpi-label">오늘</div></div>
           <div class="view-kpi"><div class="view-kpi-val" id="iss-week">0</div><div class="view-kpi-label">이번 주</div></div>
           <div class="view-kpi"><div class="view-kpi-val" id="iss-month">0</div><div class="view-kpi-label" id="iss-month-label">이번 달</div></div>
+          <button onclick="showIssuesSummary()"
+            style="padding:6px 14px;border-radius:var(--r);background:var(--accent-l);color:var(--accent);border:1px solid var(--accent-b);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
+            📊 이달 요약
+          </button>
           <div style="display:flex;align-items:center;gap:6px;">
             <button class="month-nav-btn" onclick="changeMonth('issues',-1)">‹</button>
             <span class="month-nav-label" id="iss-month-nav-label"></span>
@@ -324,7 +329,22 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
       <div class="two-col">
         <div class="col-form">
           <div class="sec-title">새 이슈 등록</div>
-          <div class="form-group"><label class="form-label">이유 선택 (복수 가능)</label><div class="tag-grid" id="iss-tags"></div></div>
+          <div class="form-group">
+            <label class="form-label">이유 선택 (복수 가능)</label>
+            <div class="tag-grid" id="iss-tags"></div>
+            <!-- 태그 추가 -->
+            <div style="display:flex;gap:6px;margin-top:10px;">
+              <input class="form-input" type="text" id="iss-new-tag"
+                placeholder="새 태그 입력..."
+                style="flex:1;font-size:12px;padding:6px 10px;"
+                onkeydown="if(event.key==='Enter')addIssueTag()">
+              <button onclick="addIssueTag()"
+                style="padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;white-space:nowrap;">
+                + 추가
+              </button>
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-top:4px;">태그를 길게 누르면 삭제할 수 있어요</div>
+          </div>
           <div class="form-group"><label class="form-label">메모 (선택)</label><textarea class="form-input" id="iss-memo" placeholder="추가 상황을 적어주세요..." rows="3"></textarea></div>
           <button class="btn-primary" onclick="addIssue()">등록</button>
         </div>
@@ -667,7 +687,8 @@ const GS_COL_MAP = {
   cash:       {id:'고유ID',date:'날짜',type:'구분',w50000:'5만',w10000:'1만',w5000:'5천',w1000:'1천',w500:'500원',w100:'100원',w50:'50원',w10:'10원',total:'합계',base:'기준시재',diff:'차액',memo:'비고',staff:'담당자'},
 };;
 const STAFF_LIST = ['강승호(점장)','신경대','허시현','윤승태','손우형'];
-const ISSUE_TAGS = ['사이즈 없음','원하는 모델 없음','가격 부담','타 채널 저렴','더 생각해보겠다','착화감 불만족'];
+const DEFAULT_ISSUE_TAGS = ['사이즈 없음','원하는 모델 없음','가격 부담','타 채널 저렴','더 생각해보겠다','착화감 불만족','기타'];
+let ISSUE_TAGS = load('racement_issue_tags', null) || DEFAULT_ISSUE_TAGS.slice();
 const DISC_TYPES = {
   runcop:{label:'런콥 할인',color:'#7C3AED',bg:'#F5F3FF'},
   brand: {label:'브랜드 관계자',color:'#0891B2',bg:'#ECFEFF'},
@@ -808,6 +829,7 @@ function renderHome(){
   const s=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
 
   s('home-issues-count',issues.filter(i=>getDate(i)===today).length);
+  s('home-issues-month',issues.filter(i=>getDate(i).startsWith(curMonth)).length);
 
   const openStore=storeIssues.filter(i=>!i.done).length;
   const urgStore=storeIssues.filter(i=>!i.done&&i.urgency==='urgent').length;
@@ -851,7 +873,51 @@ function goThisMonth(panel){panelMonths[panel]={year:new Date().getFullYear(),mo
 // 미구매 이슈
 // ══════════════════════════════════════
 let selTags=new Set();
-function renderIssueTags(){const el=document.getElementById('iss-tags');if(!el)return;el.innerHTML=ISSUE_TAGS.map(t=>`<button class="tag-chip${selTags.has(t)?' sel':''}" onclick="toggleTag('${t}')">${t}</button>`).join('');}
+function saveIssueTags() {
+  save('racement_issue_tags', ISSUE_TAGS);
+}
+
+function addIssueTag() {
+  const input = document.getElementById('iss-new-tag');
+  if(!input) return;
+  const tag = input.value.trim();
+  if(!tag) { showToast('태그명을 입력해주세요'); return; }
+  if(ISSUE_TAGS.includes(tag)) { showToast('이미 있는 태그예요'); return; }
+  ISSUE_TAGS.push(tag);
+  saveIssueTags();
+  input.value = '';
+  renderIssueTags();
+  showToast(`✅ '${tag}' 태그 추가됨`);
+}
+
+function delIssueTag(tag) {
+  if(!confirm(`'${tag}' 태그를 삭제할까요?`)) return;
+  ISSUE_TAGS = ISSUE_TAGS.filter(t => t !== tag);
+  selTags.delete(tag);
+  saveIssueTags();
+  renderIssueTags();
+}
+
+function renderIssueTags() {
+  const el = document.getElementById('iss-tags');
+  if(!el) return;
+  el.innerHTML = ISSUE_TAGS.map(t => `
+    <div style="position:relative;display:inline-block;">
+      <button class="tag-chip${selTags.has(t)?' sel':''}"
+        onclick="toggleTag('${t.replace(/'/g,"\\'")}')"
+        oncontextmenu="event.preventDefault();delIssueTag('${t.replace(/'/g,"\\'")}')">
+        ${t}
+      </button>
+      <button onclick="delIssueTag('${t.replace(/'/g,"\\'")}');event.stopPropagation();"
+        title="삭제"
+        style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;
+               background:var(--red);color:#fff;border:none;cursor:pointer;
+               font-size:9px;display:flex;align-items:center;justify-content:center;
+               opacity:0;transition:opacity .15s;line-height:1;"
+        onmouseover="this.style.opacity='1'"
+        onmouseout="this.style.opacity='0'">✕</button>
+    </div>`).join('');
+}
 function toggleTag(t){selTags.has(t)?selTags.delete(t):selTags.add(t);renderIssueTags();}
 function addIssue(){if(!selTags.size){showToast('이유를 선택해주세요');return;}const now=new Date();issues.push({id:Date.now(),tags:[...selTags],memo:document.getElementById('iss-memo').value.trim(),staff:getStaff(),time:fmtDateTime(now),date:fmt(now)});save('racement_issues',issues);scheduleAutoSave('issues');selTags.clear();document.getElementById('iss-memo').value='';renderIssues();showToast('✅ 미구매 이슈 등록됨');}
 function delIssue(id){if(!confirm('삭제할까요?'))return;issues=issues.filter(i=>i.id!==id);save('racement_issues',issues);scheduleAutoSave('issues');renderIssues();renderHome();}
@@ -871,9 +937,64 @@ function renderIssues(){
   el.innerHTML=listData.length?listData.map(i=>`<div class="item-card"><div class="item-body"><div class="item-tags">${i.tags.map(t=>`<span class="item-tag">${t}</span>`).join('')}</div>${i.memo?`<div class="item-meta" style="margin-bottom:3px;">${i.memo}</div>`:''}<div class="item-meta">👤 ${i.staff||'미지정'} · ${getDate(i)}</div></div><div class="item-actions"><button class="icon-btn" onclick="delIssue(${i.id})" title="삭제">🗑</button></div></div>`).join(''):`<div class="empty-state"><div class="empty-icon">💬</div><div class="empty-text">등록된 이슈가 없어요</div></div>`;
 }
 
-// ══════════════════════════════════════
-// 매장 이슈
-// ══════════════════════════════════════
+function showIssuesSummary() {
+  const pm = panelMonths.issues;
+  const selMonth = getMonthStr('issues');
+  const monthData = issues.filter(i => getDate(i).startsWith(selMonth));
+  const total = monthData.length;
+
+  if(total === 0) {
+    showPopup('📊 미구매 이슈 요약', `${pm.year}년 ${pm.month+1}월 등록된 이슈가 없어요`, 'auto', 2000);
+    return;
+  }
+
+  // 태그별 집계
+  const tagCount = {};
+  ISSUE_TAGS.forEach(t => tagCount[t] = 0);
+  monthData.forEach(i => {
+    (i.tags||[]).forEach(t => {
+      if(tagCount[t] !== undefined) tagCount[t]++;
+      else tagCount[t] = 1;
+    });
+  });
+
+  // 많은 순 정렬
+  const sorted = Object.entries(tagCount)
+    .filter(([,v]) => v > 0)
+    .sort((a,b) => b[1]-a[1]);
+
+  const rows = sorted.map(([tag, count]) => {
+    const pct = Math.round(count / total * 100);
+    const barW = Math.round(pct);
+    return `<div style="margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-size:13px;font-weight:600;color:var(--text);">${tag}</span>
+        <span style="font-size:13px;font-weight:700;color:var(--accent);">${count}건 <span style="color:var(--text3);font-weight:400;">(${pct}%)</span></span>
+      </div>
+      <div style="background:var(--surface2);border-radius:4px;height:6px;overflow:hidden;">
+        <div style="width:${barW}%;height:100%;background:var(--accent);border-radius:4px;transition:width .4s;"></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // 팝업 커스텀 (일반 팝업과 다른 내용)
+  const overlay = document.getElementById('popup-overlay');
+  const box     = document.getElementById('popup-box');
+  if(!overlay||!box) return;
+
+  box.innerHTML = `
+    <div style="font-size:22px;margin-bottom:8px;">📊</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:4px;">${pm.year}년 ${pm.month+1}월 미구매 이슈</div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:16px;">총 <strong style="color:var(--accent);font-size:18px;">${total}</strong>건</div>
+    <div style="text-align:left;max-height:320px;overflow-y:auto;">${rows}</div>
+    <button id="popup-close" onclick="closePopup()"
+      style="margin-top:18px;padding:9px 28px;background:var(--accent);color:#fff;border-radius:var(--r);font-size:14px;font-weight:700;border:none;cursor:pointer;width:100%;">
+      닫기
+    </button>`;
+  overlay.classList.add('show');
+}
+
+
 let siUrgency='urgent';
 function setUrgency(u,btn){siUrgency=u;document.querySelectorAll('.urgency-btn').forEach(b=>b.className='urgency-btn');btn.classList.add(`sel-${u}`);}
 function addStoreIssue(){const title=document.getElementById('si-title').value.trim();if(!title){showToast('이슈 제목을 입력해주세요');return;}const now=new Date();storeIssues.push({id:Date.now(),urgency:siUrgency,title,memo:document.getElementById('si-memo').value.trim(),staff:getStaff(),createdAt:fmtDateTime(now),done:false,doneDate:null});save('racement_store_issues',storeIssues);scheduleAutoSave('storeIssues');document.getElementById('si-title').value='';document.getElementById('si-memo').value='';renderStore();showToast('✅ 매장 이슈 등록됨');}
