@@ -1706,16 +1706,16 @@ function calcDeposit() {
 
   // 팝업으로 표시
   const depositRows = DENOMS.filter(d => toDeposit[d.key] > 0)
-    .map(d => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);">
+    .map(d => `<div style="display:grid;grid-template-columns:60px 50px 1fr;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">
       <span style="font-size:13px;font-weight:600;">${d.label}</span>
-      <span style="font-size:13px;">${toDeposit[d.key]}장</span>
+      <span style="font-size:13px;text-align:center;">${toDeposit[d.key]}장</span>
       <span style="font-size:13px;font-weight:600;text-align:right;">${(toDeposit[d.key]*d.value).toLocaleString()}원</span>
     </div>`).join('');
 
   const remainRows = DENOMS.filter(d => remaining[d.key] > 0)
-    .map(d => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);">
+    .map(d => `<div style="display:grid;grid-template-columns:60px 50px 1fr;align-items:center;padding:5px 0;border-bottom:1px solid var(--border);">
       <span style="font-size:13px;font-weight:600;">${d.label}</span>
-      <span style="font-size:13px;">${remaining[d.key]}장</span>
+      <span style="font-size:13px;text-align:center;">${remaining[d.key]}장</span>
       <span style="font-size:13px;font-weight:600;text-align:right;">${(remaining[d.key]*d.value).toLocaleString()}원</span>
     </div>`).join('');
 
