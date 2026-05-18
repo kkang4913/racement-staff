@@ -1644,13 +1644,14 @@ function setCashType(type, btn) {
   calcCash();
 }
 
-// 전일 수량 불러오기
+// 전일 수량 불러오기 (최근 7일 내 가장 최근 미감 기준)
 function loadPrevCashQty(silent=false) {
-  const today    = fmt(new Date());
-  const yesterday= fmt(new Date(Date.now() - 86400000));
+  const today = fmt(new Date());
+  // 오늘 제외하고 가장 최근 미감 찾기 (최대 7일 이내)
   const prev = cashEntries
-    .filter(e => e.type === '미감' && (getDate(e) === yesterday || getDate(e) === today))
-    .sort((a,b) => b.id - a.id)[0];
+    .filter(e => e.type === '미감' && getDate(e) < today)
+    .sort((a,b) => getDate(b).localeCompare(getDate(a)))[0];
+
   if(!prev) {
     if(!silent) showToast('이전 미감 기록이 없어요');
     return;
@@ -1660,7 +1661,7 @@ function loadPrevCashQty(silent=false) {
     if(el) el.value = prev[d.key] || 0;
   });
   calcCash();
-  if(!silent) showToast('✅ 전일 미감 수량을 불러왔어요');
+  if(!silent) showToast(`✅ ${getDate(prev)} 미감 수량을 불러왔어요`);
 }
 
 // 입금액 계산 (1,000,000원 보관 기준)
