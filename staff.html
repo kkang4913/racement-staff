@@ -297,6 +297,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
         <div class="home-card-name">SNS 유입</div>
         <div class="home-card-val" id="home-sns-count">0</div>
         <div class="home-card-sub">오늘 유입</div>
+        <div style="margin-top:6px;font-size:12px;color:var(--text3);">이번 달 <span id="home-sns-month" style="font-weight:700;color:var(--pink);">0</span>명</div>
       </div>
       <div class="home-cal-card" onclick="switchView('calendar',document.querySelector('[onclick*=calendar]'))">
         <div class="home-cal-title">📅 다가오는 일정</div>
@@ -489,6 +490,14 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
           <div class="view-kpi" style="border-top:2px solid var(--green);">
             <div class="view-kpi-val" id="sns-today-amount" style="font-size:15px;color:var(--green);">—</div>
             <div class="view-kpi-label">오늘 구매금액</div>
+          </div>
+          <div class="view-kpi" style="border-top:2px solid var(--purple);">
+            <div class="view-kpi-val" id="sns-month-inflow" style="color:var(--purple);">0</div>
+            <div class="view-kpi-label">이번 달 유입</div>
+          </div>
+          <div class="view-kpi">
+            <div class="view-kpi-val" id="sns-month-amount" style="font-size:14px;">—</div>
+            <div class="view-kpi-label">이번 달 구매금액</div>
           </div>
         </div>
       </div>
@@ -685,6 +694,7 @@ const GS_COL_MAP = {
   discounts:  {id:'고유ID',date:'날짜',type:'유형',product:'제품명',original:'정가',rate:'할인율(%)',amount:'할인금액',final:'실결제금액',staff:'담당자'},
   snsEntries: {id:'고유ID',date:'날짜',eventId:'이벤트ID',eventTitle:'이벤트명',inflow:'유입수',purchase:'구매건수',amount:'구매금액',staff:'담당자'},
   cash:       {id:'고유ID',date:'날짜',type:'구분',w50000:'5만',w10000:'1만',w5000:'5천',w1000:'1천',w500:'500원',w100:'100원',w50:'50원',w10:'10원',total:'합계',base:'기준시재',diff:'차액',memo:'비고',staff:'담당자'},
+  // calendar: 일정_RAW(calToRawRows)와 일정_VIEW(calToViewRows)로 분리 저장 — GS_COL_MAP 불필요
 };;
 const STAFF_LIST = ['강승호(점장)','신경대','허시현','윤승태','손우형'];
 const DEFAULT_ISSUE_TAGS = ['사이즈 없음','원하는 모델 없음','가격 부담','타 채널 저렴','더 생각해보겠다','착화감 불만족','기타'];
@@ -764,6 +774,16 @@ function closePopup() {
   const overlay = document.getElementById('popup-overlay');
   if(overlay) overlay.classList.remove('show');
   clearTimeout(_popupTimer);
+  // popup-box를 원래 구조로 복원 (showIssuesSummary 등이 덮어쓴 경우 대비)
+  const box = document.getElementById('popup-box');
+  if(box && !box.querySelector('#popup-icon')) {
+    box.innerHTML = `
+      <div id="popup-icon">✅</div>
+      <div id="popup-msg">완료</div>
+      <div id="popup-sub" style="display:none;font-size:12px;color:var(--text3);margin-top:6px;"></div>
+      <button id="popup-close" onclick="closePopup()"
+        style="margin-top:18px;padding:9px 28px;background:var(--accent);color:#fff;border-radius:var(--r);font-size:14px;font-weight:700;border:none;cursor:pointer;transition:all .15s;">확인</button>`;
+  }
 }
 
 
@@ -801,7 +821,7 @@ function switchView(name,navEl){
   if(name==='store')    renderStore();
   if(name==='review')   renderReview();
   if(name==='discount') renderDiscount();
-  if(name==='sns')      renderSns();
+  if(name==='sns')      { if(!calEvents.length) loadAll(); renderSns(); }
   if(name==='cash')     { renderCashDenomRows(); calcCash(); renderCash(); }
   if(name==='calendar') renderCalendar();
 }
@@ -841,8 +861,10 @@ function renderHome(){
   s('home-review-rate',totalPay>0?Math.round(totalRev/totalPay*100)+'%':'—');
 
   // SNS 오늘 유입
-  const todaySns=snsEntries.filter(e=>getDate(e)===today).reduce((s,e)=>s+(e.total||0),0);
-  s('home-sns-count',todaySns);
+  const todaySns=snsEntries.filter(e=>getDate(e)===today).reduce((s,e)=>s+(e.inflow||e.total||0),0);
+  const monthSns=snsEntries.filter(e=>getDate(e).startsWith(curMonth)).reduce((s,e)=>s+(e.inflow||e.total||0),0);
+  s('home-sns-count', todaySns);
+  s('home-sns-month', monthSns);
 
   const badge=document.getElementById('store-badge');
   if(badge){badge.textContent=urgStore>0?urgStore:'';badge.style.display=urgStore>0?'block':'none';}
@@ -1135,6 +1157,14 @@ function renderSns() {
   s('sns-today-amount',   todayAmount > 0 ? todayAmount.toLocaleString()+'원' : '—');
   s('home-sns-count',     todayInflow);
 
+  // 이번 달 통계
+  const curMonth = fmt(new Date()).slice(0,7);
+  const monthData = snsEntries.filter(e => getDate(e).startsWith(curMonth));
+  const monthInflow  = monthData.reduce((s,e) => s+(e.inflow||0), 0);
+  const monthAmount  = monthData.reduce((s,e) => s+(e.amount||0), 0);
+  s('sns-month-inflow',  monthInflow);
+  s('sns-month-amount',  monthAmount > 0 ? monthAmount.toLocaleString()+'원' : '—');
+
   // 진행 중인 이벤트 카드
   const activeEvts = getActiveSnsEvents();
   const cardsEl = document.getElementById('sns-event-cards');
@@ -1343,15 +1373,6 @@ function renderCalendar(){
   const listEl=document.getElementById('cal-month-list');
   if(listEl){listEl.innerHTML=mEvts.length?mEvts.map(e=>{const cat=CAL_CATS[e.cat]||CAL_CATS.other;const dl=e.endDate&&e.endDate!==e.date?`${e.date}~${e.endDate}`:e.date;const snsInfo=e.cat==='sns'&&e.snsGoal?` · 목표 ${e.snsGoal}명`:'';return`<div class="cal-list-item" onclick="openCalModal('${e.id}')"><div class="cal-dot" style="background:${cat.color};"></div><div style="flex:1;"><div style="font-size:14px;font-weight:600;">${e.title}</div><div style="font-size:12px;color:${cat.color};">${dl} · ${cat.label}${snsInfo}${e.memo?' · '+e.memo:''}</div></div></div>`;}).join(''):`<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-text">이번 달 일정이 없어요</div></div>`;}
 
-  function calToGsRows(){
-    if(!calEvents.length)return[];const rows=[],days=['일','월','화','수','목','금','토'];
-    const months=[...new Set(calEvents.map(e=>e.date.slice(0,7)))].sort();
-    months.forEach(ym=>{const[y,m]=ym.split('-').map(Number);const lastDay=new Date(y,m,0).getDate(),firstWd=new Date(y,m-1,1).getDay();rows.push({'주차':`📅 ${y}년 ${m}월`,'일':'일','월':'월','화':'화','수':'수','목':'목','금':'금','토':'토'});let d=1,week=1;while(d<=lastDay){const row={'주차':`${week}주차`};for(let wd=0;wd<7;wd++){if(week===1&&wd<firstWd){row[days[wd]]='';continue;}if(d>lastDay){row[days[wd]]='';continue;}const ds=`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const evts=calEvents.filter(e=>{const end=e.endDate||e.date;return e.date<=ds&&end>=ds;});row[days[wd]]=evts.length?`${d}\n`+evts.map(e=>`[${CAL_CATS[e.cat]?.label||e.cat}] ${e.title}`).join('\n'):String(d);d++;}rows.push(row);week++;}rows.push({'주차':'','일':'','월':'','화':'','수':'','목':'','금':'','토':''});});
-    rows.push({'주차':'▼ 원본 데이터','일':'고유ID','월':'날짜','화':'종료일','수':'제목','목':'카테고리','금':'메모','토':''});
-    calEvents.sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{rows.push({'주차':'','일':String(e.id),'월':e.date,'화':e.endDate||'','수':e.title,'목':CAL_CATS[e.cat]?.label||e.cat,'금':e.memo||'','토':''});});
-    return rows;
-  }
-  window.calToGsRows=calToGsRows;
 }
 
 // ══════════════════════════════════════
@@ -1708,6 +1729,13 @@ function saveCash() {
   entry.diff  = total - entry.base;
 
   if(total === 0) { showToast('장수를 입력해주세요'); return; }
+
+  // 같은 날 같은 구분(미감/오픈) 중복 체크
+  const today2 = fmt(new Date());
+  const dupEntry = cashEntries.find(e => getDate(e) === today2 && e.type === cashType);
+  if(dupEntry) {
+    if(!confirm(`오늘 ${cashType} 시재가 이미 저장돼 있어요.\n(${(dupEntry.total||0).toLocaleString()}원)\n\n추가로 저장할까요?`)) return;
+  }
 
   cashEntries.push(entry);
   saveCashLocal();
