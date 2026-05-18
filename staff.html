@@ -201,6 +201,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 .home-card.store::before{background:var(--red);}
 .home-card.review::before{background:var(--green);}
 .home-card.discount::before{background:var(--purple);}
+.home-card.product::before{ background:#EA580C; }
 .home-card.sns::before{background:var(--pink);}
 .home-card-icon{font-size:24px;margin-bottom:10px;}
 .home-card-name{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px;}
@@ -258,6 +259,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
     <div class="nav-item active" onclick="switchView('home',this)"><span class="nav-icon">🏠</span><span class="nav-label">홈</span></div>
     <div class="nav-item" onclick="switchView('issues',this)"><span class="nav-icon">💬</span><span class="nav-label">미구매 이슈</span></div>
     <div class="nav-item" onclick="switchView('store',this)"><span class="nav-icon">🏪</span><span class="nav-label">매장 이슈</span><span class="nav-badge" id="store-badge"></span></div>
+    <div class="nav-item" onclick="switchView('product',this)"><span class="nav-icon">📦</span><span class="nav-label">제품 이슈</span><span class="nav-badge" id="product-badge"></span></div>
     <div class="nav-item" onclick="switchView('review',this)"><span class="nav-icon">⭐</span><span class="nav-label">리뷰 트래커</span></div>
     <div class="nav-item" onclick="switchView('discount',this)"><span class="nav-icon">🏷</span><span class="nav-label">제휴 할인</span></div>
     <div class="nav-item" onclick="switchView('sns',this)"><span class="nav-icon">📱</span><span class="nav-label">SNS 유입</span></div>
@@ -286,6 +288,12 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
         <div class="home-card-val" id="home-store-count">0</div>
         <div class="home-card-sub" id="home-store-sub">미완료</div>
       </div>
+      <div class="home-card product" onclick="switchView('product',document.querySelector('[onclick*=product]'))" style="cursor:pointer;">
+        <div class="home-card-icon">📦</div>
+        <div class="home-card-name">제품 이슈</div>
+        <div class="home-card-val" id="home-product-count" style="color:#EA580C;">0</div>
+        <div class="home-card-sub">미완료</div>
+      </div>
       <div class="home-card review" onclick="switchView('review',document.querySelector('[onclick*=review]'))">
         <div class="home-card-icon">⭐</div>
         <div class="home-card-name">리뷰 전환율</div>
@@ -298,6 +306,10 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
         <div class="home-card-val" id="home-sns-count">0</div>
         <div class="home-card-sub">오늘 유입</div>
         <div style="margin-top:6px;font-size:12px;color:var(--text3);">이번 달 <span id="home-sns-month" style="font-weight:700;color:var(--pink);">0</span>명</div>
+      </div>
+      <div class="home-cal-card" onclick="switchView('product',document.querySelector('[onclick*=product]'))" style="border-left-color:#EA580C;margin-bottom:0;">
+        <div class="home-cal-title" style="color:#EA580C;">📦 제품 이슈 (미완료)</div>
+        <div id="home-product-list"><div style="font-size:13px;color:var(--text3);">미완료 제품 이슈가 없어요</div></div>
       </div>
       <div class="home-cal-card" onclick="switchView('calendar',document.querySelector('[onclick*=calendar]'))">
         <div class="home-cal-title">📅 다가오는 일정</div>
@@ -384,6 +396,70 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
         <div class="col-list">
           <div class="sec-title">미완료 이슈</div>
           <div id="si-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 제품 이슈 ══ -->
+  <div class="view" id="view-product">
+    <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+      <div class="view-header">
+        <div class="view-title">📦 제품 이슈</div>
+        <div class="view-kpi-row">
+          <div class="view-kpi" style="border-top:2px solid #EA580C;">
+            <div class="view-kpi-val" id="pi-urgent" style="color:#EA580C;">0</div>
+            <div class="view-kpi-label">🔴 긴급</div>
+          </div>
+          <div class="view-kpi">
+            <div class="view-kpi-val" id="pi-open">0</div>
+            <div class="view-kpi-label">미완료</div>
+          </div>
+          <div class="view-kpi" style="border-top:2px solid var(--green);">
+            <div class="view-kpi-val" id="pi-done" style="color:var(--green);">0</div>
+            <div class="view-kpi-label">완료</div>
+          </div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="col-form">
+          <div class="sec-title">제품 이슈 등록</div>
+          <div class="input-row" style="margin-bottom:12px;">
+            <div>
+              <label class="form-label">브랜드</label>
+              <input class="form-input" type="text" id="pi-brand" placeholder="예: 호카, 나이키...">
+            </div>
+            <div>
+              <label class="form-label">중요도</label>
+              <div class="urgency-row">
+                <button class="urgency-btn sel-urgent" onclick="setPiUrgency('urgent',this)">🔴 긴급</button>
+                <button class="urgency-btn" onclick="setPiUrgency('normal',this)">🟡 일반</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">제품명</label>
+            <input class="form-input" type="text" id="pi-product" placeholder="예: 본디8 265 블랙">
+          </div>
+          <div class="form-group">
+            <label class="form-label">이슈 유형</label>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;" id="pi-type-row">
+              <button class="cal-cat-btn pi-type-btn sel-pi-type" data-type="재고불일치" onclick="setPiType('재고불일치',this)">재고불일치</button>
+              <button class="cal-cat-btn pi-type-btn" data-type="파손" onclick="setPiType('파손',this)">파손</button>
+              <button class="cal-cat-btn pi-type-btn" data-type="판매금지" onclick="setPiType('판매금지',this)">판매금지</button>
+              <button class="cal-cat-btn pi-type-btn" data-type="가격오류" onclick="setPiType('가격오류',this)">가격오류</button>
+              <button class="cal-cat-btn pi-type-btn" data-type="기타" onclick="setPiType('기타',this)">기타</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">상세 내용</label>
+            <textarea class="form-input" id="pi-memo" placeholder="예: ERP 재고 3개, 실재고 0개" rows="3"></textarea>
+          </div>
+          <button class="btn-primary" onclick="addProductIssue()">등록</button>
+        </div>
+        <div class="col-list">
+          <div class="sec-title">미완료 제품 이슈</div>
+          <div id="pi-list"></div>
         </div>
       </div>
     </div>
@@ -694,7 +770,7 @@ const GS_URL = 'https://script.google.com/macros/s/AKfycbzrVmRwUU2_DJqti1DPEvvdl
 const GS_SHEETS = {
   issues:'미구매이슈', storeIssues:'매장이슈', reviews:'리뷰트래커',
   discounts:'제휴할인', calendar:'일정_RAW', snsEntries:'SNS유입',
-  cash:'현금시재',
+  cash:'현금시재', productIssues:'제품이슈',
 };
 const GS_COL_MAP = {
   issues:     {id:'고유ID',tags:'이유태그',memo:'메모내용',staff:'담당자',time:'등록일시'},
@@ -702,7 +778,8 @@ const GS_COL_MAP = {
   reviews:    {id:'고유ID',date:'날짜',pay:'결제건수',rev:'리뷰건수',rate:'전환율'},
   discounts:  {id:'고유ID',date:'날짜',type:'유형',product:'제품명',original:'정가',rate:'할인율(%)',amount:'할인금액',final:'실결제금액',staff:'담당자'},
   snsEntries: {id:'고유ID',date:'날짜',eventId:'이벤트ID',eventTitle:'이벤트명',inflow:'유입수',purchase:'구매건수',amount:'구매금액',staff:'담당자'},
-  cash:       {id:'고유ID',date:'날짜',type:'구분',w50000:'5만',w10000:'1만',w5000:'5천',w1000:'1천',w500:'500원',w100:'100원',w50:'50원',w10:'10원',total:'합계',base:'기준시재',diff:'차액',memo:'비고',staff:'담당자'},
+  cash:          {id:'고유ID',date:'날짜',type:'구분',w50000:'5만',w10000:'1만',w5000:'5천',w1000:'1천',w500:'500원',w100:'100원',w50:'50원',w10:'10원',total:'합계',base:'기준시재',diff:'차액',memo:'비고',staff:'담당자'},
+  productIssues: {id:'고유ID',brand:'브랜드',product:'제품명',issueType:'이슈유형',memo:'상세내용',urgency:'중요도',done:'완료여부',doneDate:'완료일',staff:'담당자',createdAt:'등록일시'},
   // calendar: 일정_RAW(calToRawRows)와 일정_VIEW(calToViewRows)로 분리 저장 — GS_COL_MAP 불필요
 };;
 const STAFF_LIST = ['강승호(점장)','신경대','허시현','윤승태','손우형'];
@@ -828,6 +905,7 @@ function switchView(name,navEl){
   if(name==='home')     {loadAll();renderHome();}
   if(name==='issues')   renderIssues();
   if(name==='store')    renderStore();
+  if(name==='product')  renderProductIssues();
   if(name==='review')   renderReview();
   if(name==='discount') renderDiscount();
   if(name==='sns')      { if(!calEvents.length) loadAll(); renderSns(); }
@@ -847,6 +925,7 @@ function loadAll(){
   calEvents      =load('racement_calendar');
   snsEntries     =load('racement_sns_entries');
   cashEntries    =load('racement_cash');
+  productIssues  =load('racement_product_issues');
 }
 
 // ══════════════════════════════════════
@@ -864,6 +943,8 @@ function renderHome(){
   const urgStore=storeIssues.filter(i=>!i.done&&i.urgency==='urgent').length;
   s('home-store-count',openStore);
   s('home-store-sub',urgStore>0?`🔴 긴급 ${urgStore}건 포함`:'미완료');
+  // 제품 이슈
+  renderProductIssues();
 
   const mRev=reviewEntries.filter(e=>getDate(e).startsWith(curMonth));
   const totalPay=mRev.reduce((s,e)=>s+e.pay,0),totalRev=mRev.reduce((s,e)=>s+e.rev,0);
@@ -1025,6 +1106,121 @@ function showIssuesSummary() {
   overlay.classList.add('show');
 }
 
+
+// ══════════════════════════════════════
+// 제품 이슈
+// ══════════════════════════════════════
+let productIssues = [];
+let piUrgency = 'urgent';
+let piType = '재고불일치';
+
+function loadProductIssues() { productIssues = load('racement_product_issues'); }
+function saveProductIssuesLocal() { save('racement_product_issues', productIssues); }
+
+function setPiUrgency(u, btn) {
+  piUrgency = u;
+  document.querySelectorAll('#view-product .urgency-btn').forEach(b => b.className='urgency-btn');
+  btn.classList.add(`sel-${u}`);
+}
+
+function setPiType(type, btn) {
+  piType = type;
+  document.querySelectorAll('.pi-type-btn').forEach(b => {
+    b.style.cssText=''; b.classList.remove('sel-pi-type');
+  });
+  btn.style.cssText='border-color:#EA580C;background:#FFF7ED;color:#EA580C;font-weight:700;border-width:1.5px;';
+}
+
+function addProductIssue() {
+  const brand   = document.getElementById('pi-brand').value.trim();
+  const product = document.getElementById('pi-product').value.trim();
+  const memo    = document.getElementById('pi-memo').value.trim();
+  if(!brand||!product) { showToast('브랜드와 제품명을 입력해주세요'); return; }
+  const now = new Date();
+  productIssues.push({
+    id:Date.now(), brand, product, issueType:piType, memo,
+    urgency:piUrgency, staff:getStaff(), createdAt:fmtDateTime(now),
+    done:false, doneDate:null,
+  });
+  saveProductIssuesLocal();
+  scheduleAutoSave('productIssues');
+  document.getElementById('pi-brand').value='';
+  document.getElementById('pi-product').value='';
+  document.getElementById('pi-memo').value='';
+  renderProductIssues(); renderHome();
+  showToast('✅ 제품 이슈 등록됨');
+}
+
+function toggleProductDone(id) {
+  const iss = productIssues.find(i=>i.id===id); if(!iss) return;
+  iss.done=!iss.done; iss.doneDate=iss.done?fmt(new Date()):null;
+  saveProductIssuesLocal(); scheduleAutoSave('productIssues');
+  renderProductIssues(); renderHome();
+}
+
+function delProductIssue(id) {
+  if(!confirm('삭제할까요?')) return;
+  productIssues=productIssues.filter(i=>i.id!==id);
+  saveProductIssuesLocal(); scheduleAutoSave('productIssues');
+  renderProductIssues(); renderHome();
+}
+
+function renderProductIssues() {
+  const open=productIssues.filter(i=>!i.done);
+  const urg=open.filter(i=>i.urgency==='urgent');
+  const done=productIssues.filter(i=>i.done);
+  const s=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  s('pi-urgent',urg.length); s('pi-open',open.length); s('pi-done',done.length);
+  const badge=document.getElementById('product-badge');
+  if(badge){badge.textContent=urg.length||'';badge.style.display=urg.length?'block':'none';}
+
+  // 홈 제품이슈 카드 갱신
+  s('home-product-count', open.length);
+  const homeList = document.getElementById('home-product-list');
+  if(homeList) {
+    if(!open.length) {
+      homeList.innerHTML='<div style="font-size:13px;color:var(--text3);">미완료 제품 이슈가 없어요</div>';
+    } else {
+      homeList.innerHTML = open
+        .sort((a,b)=>{const po={urgent:0,normal:1};return(po[a.urgency]||1)-(po[b.urgency]||1);})
+        .slice(0,5)
+        .map(iss=>`<div class="home-cal-evt">
+          <div style="width:8px;height:8px;border-radius:50%;background:${iss.urgency==='urgent'?'var(--red)':'var(--amber)'};flex-shrink:0;"></div>
+          <div style="font-size:13px;font-weight:600;flex:1;">${iss.brand} · ${iss.product}</div>
+          <div style="font-size:11px;color:var(--text3);margin-left:auto;">${iss.issueType}</div>
+        </div>`).join('');
+    }
+  }
+
+  const sorted=[...productIssues].sort((a,b)=>{
+    if(a.done!==b.done)return a.done?1:-1;
+    const po={urgent:0,normal:1};return(po[a.urgency]||1)-(po[b.urgency]||1);
+  });
+  const el=document.getElementById('pi-list'); if(!el) return;
+  el.innerHTML=sorted.length?sorted.map(iss=>{
+    const elapsedStr=elapsed(iss.createdAt),elapsedCls=iss.done?'':elapsedClass(iss.createdAt);
+    return`<div class="item-card${iss.done?' done-card':''}">
+      <div class="item-body">
+        <div class="item-tags">
+          <span class="item-tag ${iss.urgency==='urgent'?'red':'amber'}">${iss.urgency==='urgent'?'🔴 긴급':'🟡 일반'}</span>
+          <span class="item-tag" style="background:#FFF7ED;color:#EA580C;">${iss.issueType}</span>
+        </div>
+        <div class="item-title">${iss.brand} · ${iss.product}</div>
+        <div class="item-meta">
+          👤 ${iss.staff||'미지정'}
+          <span class="item-elapsed ${elapsedCls}" style="margin-left:8px;">${elapsedStr}</span>
+          ${iss.done&&iss.doneDate?` · ✅ ${iss.doneDate} 완료`:''}
+          ${iss.memo?`<br>${iss.memo}`:''}
+        </div>
+      </div>
+      <div class="item-actions">
+        <button class="icon-btn check-btn" onclick="toggleProductDone(${iss.id})" title="${iss.done?'미완료로':'완료처리'}">${iss.done?'↩':'✅'}</button>
+        <button class="icon-btn" onclick="delProductIssue(${iss.id})">🗑</button>
+      </div>
+    </div>`;
+  }).join('')
+  :`<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-text">등록된 제품 이슈가 없어요</div></div>`;
+}
 
 let siUrgency='urgent';
 function setUrgency(u,btn){siUrgency=u;document.querySelectorAll('.urgency-btn').forEach(b=>b.className='urgency-btn');btn.classList.add(`sel-${u}`);}
@@ -1475,7 +1671,7 @@ async function gsSave(key){
   }
 
   // 나머지 데이터 저장
-  const dataMap={issues,storeIssues,reviews:reviewEntries,discounts:discountEntries,snsEntries,cash:cashEntries};
+  const dataMap={issues,storeIssues,reviews:reviewEntries,discounts:discountEntries,snsEntries,cash:cashEntries,productIssues};
   const raw=dataMap[key]||[];
   const data=toGsRows(key,raw);
   try{
@@ -1541,6 +1737,20 @@ async function gsLoad(key){
           staff: r['담당자']||'',
         }));
         save('racement_cash',cashEntries); break;
+      case 'productIssues':
+        productIssues=data.map(r=>({
+          id:        r['고유ID']||Date.now(),
+          brand:     r['브랜드']||'',
+          product:   r['제품명']||'',
+          issueType: r['이슈유형']||'기타',
+          memo:      r['상세내용']||'',
+          urgency:   r['중요도']==='긴급'?'urgent':'normal',
+          done:      r['완료여부']==='완료',
+          doneDate:  r['완료일']||null,
+          staff:     r['담당자']||'',
+          createdAt: r['등록일시']||'',
+        }));
+        save('racement_product_issues',productIssues); break;
       case 'calendar':
         // 일정_RAW는 순수 원본 데이터만 있음
         calEvents=data
@@ -1590,7 +1800,7 @@ async function loadFromGs(){
   }
   renderHome();
   const cur=document.querySelector('.view.active');
-  if(cur){const id=cur.id;if(id==='view-issues')renderIssues();if(id==='view-store')renderStore();if(id==='view-review')renderReview();if(id==='view-discount')renderDiscount();if(id==='view-sns')renderSns();if(id==='view-cash')renderCash();if(id==='view-calendar')renderCalendar();}
+  if(cur){const id=cur.id;if(id==='view-issues')renderIssues();if(id==='view-store')renderStore();if(id==='view-product')renderProductIssues();if(id==='view-review')renderReview();if(id==='view-discount')renderDiscount();if(id==='view-sns')renderSns();if(id==='view-cash')renderCash();if(id==='view-calendar')renderCalendar();}
 }
 
 async function gsPing(){
