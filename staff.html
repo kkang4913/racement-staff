@@ -1365,6 +1365,8 @@ function hidePinScreen(staff) {
   ['click','keydown','touchstart'].forEach(ev =>
     document.addEventListener(ev, resetIdleTimer));
   updateUserBadge(staff);
+  // 로그인 후 GS 연결 확인
+  setTimeout(gsPing, 500);
 }
 
 function updateUserBadge(staff) {
@@ -2160,7 +2162,7 @@ async function gsSave(key){
 async function gsLoad(key){
   if(!GS_URL)return;
   try{
-    const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),15000);
+    const ctrl=new AbortController();setTimeout(()=>ctrl.abort(),30000);
     const res=await fetch(GS_URL,{method:'POST',body:JSON.stringify({action:'load',sheet:GS_SHEETS[key]}),signal:ctrl.signal});
     if(!res.ok)throw new Error(`HTTP ${res.status}`);
     const result=await res.json();if(!result.ok)throw new Error(result.message||'불러오기 실패');
@@ -2663,11 +2665,11 @@ window.onload=()=>{
   if(checkSession()) {
     resetIdleTimer();
     ['click','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,resetIdleTimer));
+    setTimeout(gsPing, 1000); // 로그인된 경우에만 GS 연결 확인
   } else {
-    showPinScreen();
+    // DOM 완전 로드 후 PIN 화면 표시
+    setTimeout(showPinScreen, 100);
   }
-
-  setTimeout(gsPing,1000);
 };
 </script>
 </body>
