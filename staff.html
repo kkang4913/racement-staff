@@ -217,6 +217,89 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 .home-cal-title{font-size:12px;font-weight:700;color:var(--cyan);margin-bottom:10px;}
 .home-cal-evt{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);}
 .home-cal-evt:last-child{border-bottom:none;}
+
+/* ══ PIN 로그인 ══ */
+#pin-screen{
+  position:fixed;inset:0;z-index:9000;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+}
+#pin-screen.hidden{display:none;}
+.pin-wrap{
+  width:min(360px,92vw);
+  background:var(--surface);border-radius:20px;
+  padding:32px 28px;
+  box-shadow:0 20px 60px rgba(0,0,0,.12);
+  text-align:center;
+}
+.pin-logo{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:28px;letter-spacing:6px;color:var(--text);
+  margin-bottom:4px;
+}
+.pin-logo span{color:var(--accent);}
+.pin-subtitle{font-size:12px;color:var(--text3);margin-bottom:24px;}
+/* 스태프 선택 */
+.pin-staff-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  margin-bottom:8px;
+}
+.pin-staff-btn{
+  padding:14px 8px;border-radius:var(--r2);
+  border:1.5px solid var(--border);
+  background:var(--surface2);color:var(--text);
+  font-size:14px;font-weight:600;cursor:pointer;
+  transition:all .15s;
+}
+.pin-staff-btn:hover{border-color:var(--accent);background:var(--accent-l);color:var(--accent);}
+/* PIN 입력 */
+.pin-name{font-size:18px;font-weight:700;margin-bottom:20px;color:var(--text);}
+.pin-dots{
+  display:flex;justify-content:center;gap:14px;
+  margin-bottom:28px;
+}
+.pin-dot{
+  width:14px;height:14px;border-radius:50%;
+  border:2px solid var(--border);
+  background:transparent;transition:all .15s;
+}
+.pin-dot.filled{background:var(--accent);border-color:var(--accent);}
+.pin-dot.error{background:var(--red);border-color:var(--red);}
+/* 키패드 */
+.pin-keypad{
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  gap:10px;margin-bottom:16px;
+}
+.pin-key{
+  padding:16px;border-radius:var(--r2);
+  border:1px solid var(--border);
+  background:var(--surface2);color:var(--text);
+  font-size:20px;font-weight:600;cursor:pointer;
+  transition:all .15s;font-family:'JetBrains Mono',monospace;
+}
+.pin-key:hover{background:var(--border);}
+.pin-key:active{transform:scale(.94);}
+.pin-key.del{font-size:16px;color:var(--text2);}
+.pin-key.empty{pointer-events:none;background:transparent;border:none;}
+.pin-back-btn{
+  font-size:12px;color:var(--text3);
+  background:none;border:none;cursor:pointer;
+  padding:4px 8px;
+}
+.pin-back-btn:hover{color:var(--text);}
+.pin-error-msg{
+  font-size:12px;color:var(--red);
+  margin-top:8px;min-height:18px;
+}
+/* 현재 사용자 표시 (상단) */
+#current-user-badge{
+  font-size:12px;font-weight:600;color:var(--text2);
+  cursor:pointer;padding:4px 10px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:20px;transition:all .15s;
+}
+#current-user-badge:hover{border-color:var(--accent);color:var(--accent);}
+
 /* ══ SNS 이벤트 카드 ══ */
 .sns-event-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--pink);border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;box-shadow:var(--sh);}
 .sns-event-progress{background:var(--surface2);border-radius:4px;height:6px;overflow:hidden;margin-top:8px;}
@@ -229,6 +312,48 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 </style>
 </head>
 <body>
+
+<!-- PIN 로그인 화면 -->
+<div id="pin-screen">
+  <div class="pin-wrap">
+    <div class="pin-logo">RACE<span>MENT</span></div>
+    <div class="pin-subtitle">스태프 대시보드</div>
+
+    <!-- 스태프 선택 화면 -->
+    <div id="pin-step-select">
+      <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:14px;">담당자를 선택하세요</div>
+      <div class="pin-staff-grid" id="pin-staff-grid"></div>
+    </div>
+
+    <!-- PIN 입력 화면 -->
+    <div id="pin-step-input" style="display:none;">
+      <div class="pin-name" id="pin-selected-name"></div>
+      <div class="pin-dots" id="pin-dots">
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+      </div>
+      <div class="pin-keypad">
+        <button class="pin-key" onclick="pinKey('1')">1</button>
+        <button class="pin-key" onclick="pinKey('2')">2</button>
+        <button class="pin-key" onclick="pinKey('3')">3</button>
+        <button class="pin-key" onclick="pinKey('4')">4</button>
+        <button class="pin-key" onclick="pinKey('5')">5</button>
+        <button class="pin-key" onclick="pinKey('6')">6</button>
+        <button class="pin-key" onclick="pinKey('7')">7</button>
+        <button class="pin-key" onclick="pinKey('8')">8</button>
+        <button class="pin-key" onclick="pinKey('9')">9</button>
+        <button class="pin-key empty"></button>
+        <button class="pin-key" onclick="pinKey('0')">0</button>
+        <button class="pin-key del" onclick="pinDel()">⌫</button>
+      </div>
+      <div class="pin-error-msg" id="pin-error"></div>
+      <button class="pin-back-btn" onclick="pinBack()">← 담당자 다시 선택</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 <!-- 중앙 팝업 -->
 <div id="popup-overlay" onclick="if(event.target===this)closePopup()">
@@ -245,7 +370,8 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
   <div class="logo">RACE<span>MENT</span></div>
   <div class="topbar-date" id="top-date"></div>
   <div class="topbar-right">
-    <select class="staff-select" id="global-staff"><option value="">담당자 선택</option></select>
+    <button id="current-user-badge" onclick="resetSession();showPinScreen();">👤 미로그인</button>
+    <select class="staff-select" id="global-staff" style="display:none;"><option value="">담당자 선택</option></select>
     <span id="gs-log"></span>
     <div class="gs-dot" id="gs-dot"></div>
     <button class="gs-btn" onclick="syncAll()">☁ 저장</button>
@@ -319,6 +445,37 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
       <div class="home-cal-card" onclick="switchView('calendar',document.querySelector('[onclick*=calendar]'))">
         <div class="home-cal-title">📅 다가오는 일정</div>
         <div id="home-cal-list"><div style="font-size:13px;color:var(--text3);">다가오는 일정이 없어요</div></div>
+      </div>
+
+      <!-- 방문 고객 카운터 -->
+      <div style="grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:20px 24px;box-shadow:var(--sh);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <div style="font-size:12px;font-weight:700;color:var(--text2);">👥 오늘 방문 고객</div>
+          <div style="font-size:11px;color:var(--text3);" id="visitor-date"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:20px;">
+          <!-- 큰 카운터 버튼 -->
+          <div style="flex:1;text-align:center;">
+            <button id="visitor-btn" onclick="addVisitor()"
+              style="width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#3b82f6);
+                     color:#fff;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(29,78,216,.3);
+                     transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;
+                     margin:0 auto;">
+              <div id="visitor-count" style="font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:2px;line-height:1;">0</div>
+              <div style="font-size:11px;font-weight:600;opacity:.85;margin-top:2px;">탭해서 +1</div>
+            </button>
+            <button onclick="removeVisitor()"
+              style="margin-top:10px;padding:5px 16px;background:var(--surface2);border:1px solid var(--border);
+                     border-radius:20px;font-size:11px;color:var(--text3);cursor:pointer;">
+              ↩ 취소 (-1)
+            </button>
+          </div>
+          <!-- 시간대별 현황 -->
+          <div style="flex:1;">
+            <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:10px;">시간대별</div>
+            <div id="visitor-time-bars"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -836,7 +993,11 @@ function normalizeDate(v) {
   if(/^\d{8}$/.test(s)) s=s.slice(0,4)+'-'+s.slice(4,6)+'-'+s.slice(6,8);
   return s.slice(0,10);
 }
-const getDate = o => o.date || normalizeDate(o.time||o.createdAt||'');
+const getDate = o => {
+  if(o.date && o.date.length >= 10) return o.date.slice(0,10);
+  const raw = o.time || o.createdAt || '';
+  return normalizeDate(String(raw));
+};
 
 let _popupTimer;
 function showToast(msg, dur=2500) {
@@ -977,6 +1138,8 @@ function renderHome(){
   s('home-store-sub',urgStore>0?`🔴 긴급 ${urgStore}건 포함`:'미완료');
   // 제품 이슈
   renderProductIssues();
+  // 방문 고객 카운터
+  renderVisitor();
 
   const mRev=reviewEntries.filter(e=>getDate(e).startsWith(curMonth));
   const totalPay=mRev.reduce((s,e)=>s+e.pay,0),totalRev=mRev.reduce((s,e)=>s+e.rev,0);
@@ -1142,8 +1305,218 @@ function showIssuesSummary() {
 
 
 // ══════════════════════════════════════
-// 제품 이슈
+// PIN 로그인
 // ══════════════════════════════════════
+const PIN_TIMEOUT = 5 * 60 * 1000;
+const PIN_STORE   = 'racement_pins';
+const PIN_SESSION = 'racement_session';
+
+function getPins() {
+  const saved = load(PIN_STORE, null);
+  if(saved) return saved;
+  const defaults = {};
+  STAFF_LIST.forEach(s => defaults[s] = '1234');
+  return defaults;
+}
+
+let pinInput = '', pinStaff = '', pinTimer = null;
+
+function checkSession() {
+  try {
+    const s = JSON.parse(localStorage.getItem(PIN_SESSION)||'null');
+    if(!s) return false;
+    if(Date.now() - s.time > PIN_TIMEOUT) { localStorage.removeItem(PIN_SESSION); return false; }
+    const el = document.getElementById('global-staff');
+    if(el) el.value = s.staff;
+    updateUserBadge(s.staff);
+    return true;
+  } catch(e) { return false; }
+}
+
+function saveSession(staff) {
+  localStorage.setItem(PIN_SESSION, JSON.stringify({staff, time:Date.now()}));
+}
+
+function resetSession() { localStorage.removeItem(PIN_SESSION); }
+
+function resetIdleTimer() {
+  clearTimeout(pinTimer);
+  pinTimer = setTimeout(() => {
+    resetSession(); showPinScreen();
+    showToast('5분 동안 활동이 없어 잠겼어요');
+  }, PIN_TIMEOUT);
+}
+
+function showPinScreen() {
+  const screen = document.getElementById('pin-screen');
+  if(screen) screen.classList.remove('hidden');
+  pinInput = ''; pinStaff = '';
+  showPinStep('select');
+  renderPinStaffGrid();
+}
+
+function hidePinScreen(staff) {
+  const screen = document.getElementById('pin-screen');
+  if(screen) screen.classList.add('hidden');
+  const el = document.getElementById('global-staff');
+  if(el) el.value = staff;
+  saveSession(staff);
+  resetIdleTimer();
+  ['click','keydown','touchstart'].forEach(ev =>
+    document.addEventListener(ev, resetIdleTimer));
+  updateUserBadge(staff);
+}
+
+function updateUserBadge(staff) {
+  const badge = document.getElementById('current-user-badge');
+  if(badge) badge.textContent = `👤 ${staff}`;
+}
+
+function showPinStep(step) {
+  document.getElementById('pin-step-select').style.display = step==='select'?'block':'none';
+  document.getElementById('pin-step-input').style.display  = step==='input' ?'block':'none';
+}
+
+function renderPinStaffGrid() {
+  const el = document.getElementById('pin-staff-grid');
+  if(!el) return;
+  el.innerHTML = STAFF_LIST.map(s =>
+    `<button class="pin-staff-btn" onclick="selectPinStaff('${s}')">${s}</button>`
+  ).join('');
+}
+
+function selectPinStaff(staff) {
+  pinStaff = staff; pinInput = '';
+  document.getElementById('pin-selected-name').textContent = `${staff}님`;
+  document.getElementById('pin-error').textContent = '';
+  updatePinDots();
+  showPinStep('input');
+}
+
+function pinKey(num) {
+  if(pinInput.length >= 4) return;
+  pinInput += num;
+  updatePinDots();
+  if(pinInput.length === 4) setTimeout(checkPin, 150);
+}
+
+function pinDel() { pinInput = pinInput.slice(0,-1); updatePinDots(); }
+function pinBack() { pinInput = ''; pinStaff = ''; showPinStep('select'); }
+
+function updatePinDots() {
+  const dots = document.querySelectorAll('.pin-dot');
+  dots.forEach((d,i) => { d.classList.toggle('filled', i<pinInput.length); d.classList.remove('error'); });
+}
+
+function checkPin() {
+  const pins = getPins();
+  if(pins[pinStaff] === pinInput) {
+    hidePinScreen(pinStaff);
+    showToast(`✅ ${pinStaff}님 안녕하세요!`);
+  } else {
+    const dots = document.querySelectorAll('.pin-dot');
+    dots.forEach(d => { d.classList.add('error'); d.classList.remove('filled'); });
+    document.getElementById('pin-error').textContent = 'PIN이 틀렸어요. 다시 입력해주세요.';
+    pinInput = '';
+    setTimeout(() => { updatePinDots(); document.getElementById('pin-error').textContent=''; }, 800);
+  }
+}
+
+function changePin(staff, newPin) {
+  const pins = getPins(); pins[staff] = newPin; save(PIN_STORE, pins);
+}
+
+// ══════════════════════════════════════
+// 방문 고객 카운터
+// ══════════════════════════════════════
+const VISITOR_KEY = 'racement_visitors';
+
+function getVisitorData() {
+  const data = load(VISITOR_KEY, {});
+  const today = fmt(new Date());
+  if(!data[today]) data[today] = { total:0, morning:0, afternoon:0, evening:0 };
+  return { data, today };
+}
+
+function getTimeSlot() {
+  const h = new Date().getHours();
+  if(h < 12) return 'morning';
+  if(h < 18) return 'afternoon';
+  return 'evening';
+}
+
+function addVisitor() {
+  const { data, today } = getVisitorData();
+  const slot = getTimeSlot();
+  data[today].total++;
+  data[today][slot]++;
+  save(VISITOR_KEY, data);
+
+  // 버튼 애니메이션
+  const btn = document.getElementById('visitor-btn');
+  if(btn) {
+    btn.style.transform = 'scale(0.93)';
+    btn.style.boxShadow = '0 2px 10px rgba(29,78,216,.2)';
+    setTimeout(() => {
+      btn.style.transform = 'scale(1)';
+      btn.style.boxShadow = '0 4px 20px rgba(29,78,216,.3)';
+    }, 120);
+  }
+  renderVisitor();
+}
+
+function removeVisitor() {
+  const { data, today } = getVisitorData();
+  if(data[today].total <= 0) return;
+  const slot = getTimeSlot();
+  data[today].total = Math.max(0, data[today].total - 1);
+  data[today][slot] = Math.max(0, data[today][slot] - 1);
+  save(VISITOR_KEY, data);
+  renderVisitor();
+}
+
+function renderVisitor() {
+  const { data, today } = getVisitorData();
+  const d = data[today];
+
+  // 날짜 표시
+  const dateEl = document.getElementById('visitor-date');
+  if(dateEl) {
+    const now = new Date();
+    const days = ['일','월','화','수','목','금','토'];
+    dateEl.textContent = `${now.getMonth()+1}/${now.getDate()}(${days[now.getDay()]})`;
+  }
+
+  // 총 카운트
+  const countEl = document.getElementById('visitor-count');
+  if(countEl) countEl.textContent = d.total;
+
+  // 시간대별 바
+  const barsEl = document.getElementById('visitor-time-bars');
+  if(barsEl) {
+    const slots = [
+      { key:'morning',   label:'오전', emoji:'🌅', color:'#F59E0B' },
+      { key:'afternoon', label:'오후', emoji:'☀️',  color:'#3B82F6' },
+      { key:'evening',   label:'저녁', emoji:'🌙', color:'#8B5CF6' },
+    ];
+    const max = Math.max(d.morning, d.afternoon, d.evening, 1);
+    const curSlot = getTimeSlot();
+    barsEl.innerHTML = slots.map(s => `
+      <div style="margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+          <span style="font-size:12px;color:${s.key===curSlot?s.color:'var(--text3)'};font-weight:${s.key===curSlot?'700':'400'};">
+            ${s.emoji} ${s.label}
+          </span>
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:${s.color};">${d[s.key]}명</span>
+        </div>
+        <div style="background:var(--surface2);border-radius:4px;height:6px;overflow:hidden;">
+          <div style="width:${Math.round(d[s.key]/max*100)}%;height:100%;background:${s.color};border-radius:4px;transition:width .3s;"></div>
+        </div>
+      </div>`).join('');
+  }
+}
+
+
 let productIssues = [];
 let piUrgency = 'urgent';
 let piType = '재고불일치';
@@ -1795,8 +2168,20 @@ async function gsLoad(key){
     const catRev=Object.fromEntries(Object.entries(CAL_CATS).map(([k,v])=>[v.label,k]));
     switch(key){
       case 'issues':
-        issues=data.map(r=>({id:r['고유ID']||Date.now(),tags:(r['이유태그']||'').split(',').filter(Boolean),memo:r['메모내용']||'',staff:r['담당자']||'',time:r['등록일시']||'',date:normalizeDate(r['등록일시']||'')}));
-        save('racement_issues',issues);break;
+        issues=data.map(r=>{
+          const timeVal = r['등록일시']||'';
+          // GS가 날짜를 ISO 형식으로 변환할 수 있어서 normalizeDate로 처리
+          const dateVal = normalizeDate(String(timeVal));
+          return {
+            id:    r['고유ID']||Date.now(),
+            tags:  (r['이유태그']||'').split(',').filter(Boolean),
+            memo:  r['메모내용']||'',
+            staff: r['담당자']||'',
+            time:  String(timeVal),
+            date:  dateVal,
+          };
+        });
+        save('racement_issues',issues); break;
       case 'storeIssues':
         storeIssues=data.map(r=>({id:r['고유ID']||Date.now(),urgency:r['긴급도']==='긴급'?'urgent':'normal',title:r['이슈제목']||'',memo:r['상세내용']||'',staff:r['담당자']||'',done:(r['완료여부']==='완료'),doneDate:r['완료일']||null,createdAt:r['등록일시']||''}));
         save('racement_store_issues',storeIssues);break;
@@ -2241,6 +2626,14 @@ window.onload=()=>{
   updateMonthNavLabel('issues');
   updateMonthNavLabel('review');
   updateMonthNavLabel('discount');
+
+  // PIN 로그인 체크
+  if(checkSession()) {
+    resetIdleTimer();
+    ['click','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,resetIdleTimer));
+  } else {
+    showPinScreen();
+  }
 
   setTimeout(gsPing,1000);
 };
