@@ -985,6 +985,7 @@ const GS_SHEETS = {
   issues:'미구매이슈', storeIssues:'매장이슈', reviews:'리뷰트래커',
   discounts:'제휴할인', calendar:'일정_RAW', snsEntries:'SNS유입',
   cash:'현금시재', productIssues:'제품이슈',
+  schedule:'스케줄', dayoff:'대휴내역',
 };
 const GS_COL_MAP = {
   issues:     {id:'고유ID',tags:'이유태그',memo:'메모내용',staff:'담당자',time:'등록일시'},
@@ -1779,7 +1780,7 @@ function renderStore(){
 // ══════════════════════════════════════
 // 리뷰 트래커
 // ══════════════════════════════════════
-function addReview(){const date=document.getElementById('rv-date').value,pay=parseInt(document.getElementById('rv-pay').value)||0,rev=parseInt(document.getElementById('rv-rev').value)||0;if(!date){showToast('날짜를 선택해주세요');return;}if(pay===0){showToast('결제 건수를 입력해주세요');return;}if(rev>pay){showToast('리뷰 건수가 결제 건수보다 많아요');return;}const rate=pay>0?parseFloat((rev/pay*100).toFixed(1)):0;reviewEntries.push({id:Date.now(),date,pay,rev,rate});save('racement_reviews',reviewEntries);scheduleAutoSave('reviews');document.getElementById('rv-pay').value='';document.getElementById('rv-rev').value='';renderReview();showToast('✅ 리뷰 입력됨');}
+function addReview(){const date=document.getElementById('rv-date').value,pay=parseInt(document.getElementById('rv-pay').value)||0,rev=parseInt(document.getElementById('rv-rev').value)||0;if(!date){showToast('날짜를 선택해주세요');return;}if(pay===0){showToast('결제 건수를 입력해주세요');return;}if(rev>pay){showToast('리뷰 건수가 결제 건수보다 많아요');return;}const rate=pay>0?parseFloat((rev/pay*100).toFixed(1)):0;reviewEntries.push({id:Date.now(),date,pay,rev,rate});save('racement_reviews',reviewEntries);scheduleAutoSave('reviews');document.getElementById('rv-pay').value='';document.getElementById('rv-rev').value='';renderReview();renderHome();showToast('✅ 리뷰 입력됨');}
 function delReview(id){if(!confirm('삭제할까요?'))return;reviewEntries=reviewEntries.filter(e=>e.id!==id);save('racement_reviews',reviewEntries);scheduleAutoSave('reviews');renderReview();renderHome();}
 function renderReview(){
   updateMonthNavLabel('review');const selMonth=getMonthStr('review');
@@ -1800,7 +1801,7 @@ function renderReview(){
 let discType='runcop';
 function setDiscType(t,btn){discType=t;document.querySelectorAll('.disc-type-btn').forEach(b=>b.className='disc-type-btn');btn.classList.add(`sel-${t}`);}
 function calcDisc(){const orig=parseFloat(document.getElementById('disc-orig').value)||0,rate=parseFloat(document.getElementById('disc-rate').value)||0,el=document.getElementById('disc-preview');if(!el)return;if(orig>0&&rate>0){const amt=Math.round(orig*rate/100);el.style.display='block';el.textContent=`정가 ${orig.toLocaleString()}원 − 할인 ${amt.toLocaleString()}원 = 실결제 ${(orig-amt).toLocaleString()}원`;}else{el.style.display='none';}}
-function addDiscount(){const date=document.getElementById('disc-date').value,product=document.getElementById('disc-product').value.trim(),orig=parseFloat(document.getElementById('disc-orig').value)||0,rate=parseFloat(document.getElementById('disc-rate').value)||0;if(!date||!product||!orig){showToast('날짜·제품명·정가를 입력해주세요');return;}const amount=Math.round(orig*rate/100);discountEntries.push({id:Date.now(),date,type:discType,product,original:orig,rate,amount,final:orig-amount,staff:getStaff()});save('racement_discounts',discountEntries);scheduleAutoSave('discounts');document.getElementById('disc-product').value='';document.getElementById('disc-orig').value='';document.getElementById('disc-rate').value='';document.getElementById('disc-preview').style.display='none';renderDiscount();showToast('✅ 할인 내역 등록됨');}
+function addDiscount(){const date=document.getElementById('disc-date').value,product=document.getElementById('disc-product').value.trim(),orig=parseFloat(document.getElementById('disc-orig').value)||0,rate=parseFloat(document.getElementById('disc-rate').value)||0;if(!date||!product||!orig){showToast('날짜·제품명·정가를 입력해주세요');return;}const amount=Math.round(orig*rate/100);discountEntries.push({id:Date.now(),date,type:discType,product,original:orig,rate,amount,final:orig-amount,staff:getStaff()});save('racement_discounts',discountEntries);scheduleAutoSave('discounts');document.getElementById('disc-product').value='';document.getElementById('disc-orig').value='';document.getElementById('disc-rate').value='';document.getElementById('disc-preview').style.display='none';renderDiscount();renderHome();showToast('✅ 할인 내역 등록됨');}
 function delDiscount(id){if(!confirm('삭제할까요?'))return;discountEntries=discountEntries.filter(e=>e.id!==id);save('racement_discounts',discountEntries);scheduleAutoSave('discounts');renderDiscount();renderHome();}
 function renderDiscount(){
   updateMonthNavLabel('discount');const selMonth=getMonthStr('discount');
