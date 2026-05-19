@@ -2259,9 +2259,25 @@ async function gsLoad(key){
 
 async function syncAll(){
   const log=document.getElementById('gs-log');if(log)log.textContent='저장 중...';
-  showPopup('☁️ 저장 중...', '구글 시트에 저장하고 있어요', 'manual');
-  const results=await Promise.allSettled(Object.keys(GS_SHEETS).map(k=>gsSave(k)));
-  const failed=results.filter(r=>r.status==='rejected').map(r=>r.reason?.message||'오류');
+  const keys=Object.keys(GS_SHEETS);
+  const failed=[];
+  showPopup('☁️ 저장 중...', `0 / ${keys.length} 완료`, 'manual');
+
+  // 순차적으로 저장 (GS 동시 요청 제한 방지)
+  for(let i=0;i<keys.length;i++){
+    const k=keys[i];
+    try{
+      await gsSave(k);
+      const msgEl=document.getElementById('popup-msg');
+      if(msgEl) msgEl.textContent=`저장 중... (${i+1}/${keys.length})`;
+      const subEl=document.getElementById('popup-sub');
+      if(subEl){subEl.textContent=`${GS_SHEETS[k]} 저장 완료`;subEl.style.display='block';}
+    }catch(e){
+      failed.push(e.message||'오류');
+    }
+    if(i<keys.length-1) await new Promise(r=>setTimeout(r,300));
+  }
+
   if(failed.length){
     setGsStatus('err');if(log)log.textContent='일부 저장 실패';
     showPopup('❌ 저장 실패', failed.join('\n'), 'manual');
@@ -2274,9 +2290,25 @@ async function syncAll(){
 
 async function loadFromGs(){
   const log=document.getElementById('gs-log');if(log)log.textContent='불러오는 중...';
-  showPopup('📥 불러오는 중...', '구글 시트에서 데이터를 가져오고 있어요', 'manual');
-  const results=await Promise.allSettled(Object.keys(GS_SHEETS).map(k=>gsLoad(k)));
-  const failed=results.filter(r=>r.status==='rejected').map(r=>r.reason?.message||'오류');
+  const keys=Object.keys(GS_SHEETS);
+  const failed=[];
+  showPopup('📥 불러오는 중...', `0 / ${keys.length} 완료`, 'manual');
+
+  // 순차적으로 불러오기 (GS 동시 요청 제한 방지)
+  for(let i=0;i<keys.length;i++){
+    const k=keys[i];
+    try{
+      await gsLoad(k);
+      const msgEl=document.getElementById('popup-msg');
+      if(msgEl) msgEl.textContent=`불러오는 중... (${i+1}/${keys.length})`;
+      const subEl=document.getElementById('popup-sub');
+      if(subEl){subEl.textContent=`${GS_SHEETS[k]} 완료`;subEl.style.display='block';}
+    }catch(e){
+      failed.push(e.message||'오류');
+    }
+    if(i<keys.length-1) await new Promise(r=>setTimeout(r,300));
+  }
+
   if(failed.length){
     setGsStatus('err');if(log)log.textContent='일부 실패';
     showPopup('❌ 불러오기 실패', failed.join('\n'), 'manual');
