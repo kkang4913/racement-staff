@@ -307,9 +307,8 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
         <div class="home-card-sub">오늘 유입</div>
         <div style="margin-top:6px;font-size:12px;color:var(--text3);">이번 달 <span id="home-sns-month" style="font-weight:700;color:var(--pink);">0</span>명</div>
       </div>
-      <div class="home-cal-card" onclick="switchView('product',document.querySelector('[onclick*=product]'))" style="border-left-color:#EA580C;margin-bottom:0;">
-        <div class="home-cal-title" style="color:#EA580C;">📦 제품 이슈 (미완료)</div>
-        <div id="home-product-list"><div style="font-size:13px;color:var(--text3);">미완료 제품 이슈가 없어요</div></div>
+      <div style="grid-column:1/-1;">
+        <div id="home-product-list" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;"></div>
       </div>
       <div class="home-cal-card" onclick="switchView('calendar',document.querySelector('[onclick*=calendar]'))">
         <div class="home-cal-title">📅 다가오는 일정</div>
@@ -1179,16 +1178,32 @@ function renderProductIssues() {
   const homeList = document.getElementById('home-product-list');
   if(homeList) {
     if(!open.length) {
-      homeList.innerHTML='<div style="font-size:13px;color:var(--text3);">미완료 제품 이슈가 없어요</div>';
+      homeList.innerHTML=`<div style="grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px;text-align:center;box-shadow:var(--sh);">
+        <div style="font-size:20px;margin-bottom:6px;opacity:.4;">📦</div>
+        <div style="font-size:12px;color:var(--text3);">미완료 제품 이슈 없음</div>
+      </div>`;
     } else {
-      homeList.innerHTML = open
+      const displayList = open
         .sort((a,b)=>{const po={urgent:0,normal:1};return(po[a.urgency]||1)-(po[b.urgency]||1);})
-        .slice(0,5)
-        .map(iss=>`<div class="home-cal-evt">
-          <div style="width:8px;height:8px;border-radius:50%;background:${iss.urgency==='urgent'?'var(--red)':'var(--amber)'};flex-shrink:0;"></div>
-          <div style="font-size:13px;font-weight:600;flex:1;">${iss.brand} · ${iss.product}</div>
-          <div style="font-size:11px;color:var(--text3);margin-left:auto;">${iss.issueType}</div>
+        .slice(0,3);
+      homeList.innerHTML = displayList.map(iss => `
+        <div onclick="switchView('product',document.querySelector('[onclick*=product]'))"
+          style="background:var(--surface);border:1px solid var(--border);border-top:3px solid ${iss.urgency==='urgent'?'var(--red)':'var(--amber)'};
+                 border-radius:var(--r2);padding:12px 14px;box-shadow:var(--sh);cursor:pointer;transition:all .2s;"
+          onmouseover="this.style.boxShadow='var(--sh2)'" onmouseout="this.style.boxShadow='var(--sh)'">
+          <div style="font-size:10px;font-weight:700;color:${iss.urgency==='urgent'?'var(--red)':'var(--amber)'};margin-bottom:4px;">
+            ${iss.urgency==='urgent'?'🔴 긴급':'🟡 일반'} · ${iss.issueType}
+          </div>
+          <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${iss.brand}</div>
+          <div style="font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${iss.product}</div>
+          ${iss.memo?`<div style="font-size:10px;color:var(--text3);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${iss.memo}</div>`:''}
         </div>`).join('');
+      // 3개 미만이면 빈 카드로 채우기
+      if(displayList.length < 3) {
+        for(let i=displayList.length; i<3; i++) {
+          homeList.innerHTML += `<div style="background:var(--surface2);border:1px dashed var(--border);border-radius:var(--r2);padding:12px 14px;opacity:.5;"></div>`;
+        }
+      }
     }
   }
 
