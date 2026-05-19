@@ -1663,11 +1663,33 @@ function renderCalendar(){
 // GS 연동
 // ══════════════════════════════════════
 const _autoTimers={};
-function scheduleAutoSave(key){
-  if(!GS_URL)return;
+function scheduleAutoSave(key) {
+  if(!GS_URL) return;
   clearTimeout(_autoTimers[key]);
-  _autoTimers[key]=setTimeout(()=>{gsSave(key).then(()=>setGsStatus('ok')).catch(e=>showToast(`⚠ 자동 저장 실패: ${e.message}`,5000)).finally(()=>delete _autoTimers[key]);},30000);
+  _autoTimers[key] = setTimeout(() => autoSaveWithRetry(key), 30000);
 }
+
+async function autoSaveWithRetry(key, attempt=1) {
+  const MAX = 3;
+  try {
+    await gsSave(key);
+    setGsStatus('ok');
+    delete _autoTimers[key];
+  } catch(e) {
+    if(attempt < MAX) {
+      // 실패 시 30초 후 재시도
+      console.warn(`GS 자동저장 실패 (${attempt}/${MAX}), 재시도 예정:`, key);
+      _autoTimers[key] = setTimeout(() => autoSaveWithRetry(key, attempt+1), 30000);
+    } else {
+      // 3회 모두 실패 시 경고
+      delete _autoTimers[key];
+      showPopup('⚠️ 자동 저장 실패',
+        `${GS_SHEETS[key]} 저장에 실패했어요\n☁ 저장 버튼을 눌러 수동으로 저장해주세요`,
+        'manual');
+    }
+  }
+}
+
 
 function toGsRows(key,data){
   const colMap=GS_COL_MAP[key]||{};
