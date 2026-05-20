@@ -578,7 +578,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
         <div id="home-cal-list"><div style="font-size:13px;color:var(--text3);">다가오는 일정이 없어요</div></div>
       </div>
 
-    </div>    </div>
+    </div>
   </div>
 
   <!-- ══ 미구매 이슈 ══ -->
@@ -1174,7 +1174,7 @@ const NAVER_REVIEW_URL = 'https://map.naver.com/p/search/%EB%A0%88%EC%9D%B4%EC%8
 // ══════════════════════════════════════
 // 유틸
 // ══════════════════════════════════════
-const fmt = d => { if(!d) return ''; const dt=d instanceof Date?d:new Date(d); if(isNaN(dt)) return ''; return dt.toISOString().split('T')[0]; };
+const fmt = d => { if(!d) return ''; const dt=d instanceof Date?d:new Date(d); if(isNaN(dt)) return ''; return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`; };
 const fmtDateTime = d => { if(!d) return ''; const dt=d instanceof Date?d:new Date(d); if(isNaN(dt)) return ''; return `${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`; };
 
 function normalizeDate(v) {
@@ -2149,6 +2149,7 @@ function renderProductIssues() {
   :`<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-text">${piShowDone?'등록된 제품 이슈가 없어요':'미완료 제품 이슈가 없어요'}</div></div>`;
 }
 
+let siUrgency = 'urgent';
 let siShowDone = false;
 let piShowDone = false;
 
@@ -2255,8 +2256,8 @@ function quickCount(eventId, field, delta) {
   if(field === 'inflow')   state.inflow   = Math.max(0, state.inflow + delta);
   if(field === 'purchase') state.purchase = Math.max(0, state.purchase + delta);
   // 카운트 UI 갱신
-  const inflowEl   = document.getElementById(`sns-${eventId}-inflow`);
-  const purchaseEl = document.getElementById(`sns-${eventId}-purchase`);
+  const inflowEl   = document.getElementById(`sns-${eventId}-inflow`) || document.getElementById(`${eventId}-inflow-count`);
+  const purchaseEl = document.getElementById(`sns-${eventId}-purchase`) || document.getElementById(`${eventId}-purchase-count`);
   if(inflowEl)   inflowEl.textContent   = state.inflow;
   if(purchaseEl) purchaseEl.textContent = state.purchase;
 }
@@ -2814,6 +2815,7 @@ async function syncAll(){
     return;
   }
   setGsStatus('ok');
+  gsLoadHadFailure = false;
   if(log)log.textContent='저장됨';
   showPopup('✅ 저장 완료', '구글 시트에 모든 데이터가 저장됐어요', 'auto', 2000);
 }
@@ -2843,7 +2845,7 @@ async function loadFromGs(){
     setGsStatus('err');if(log)log.textContent='일부 실패';
     showPopup('❌ 불러오기 실패', failed.join('\n'), 'manual');
   } else {
-    setGsStatus('ok');if(log)log.textContent='불러옴';
+    setGsStatus('ok'); gsLoadHadFailure = false; if(log)log.textContent='불러옴';
     showPopup('✅ 불러오기 완료', '최신 데이터를 가져왔어요', 'auto', 2000);
   }
   renderHome();
