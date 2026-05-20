@@ -252,9 +252,9 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 .sch-cell:hover{filter:brightness(.92);}
 .sch-cell.S-출근 {background:#DCFCE7;color:#16A34A;}
 .sch-cell.S-휴무 {background:#F1F5F9;color:#94A3B8;}
-.sch-cell.S-대휴 {background:#F3E8FF;color:#7C3AED;}
-.sch-cell.S-대휴반{background:#EDE9FE;color:#7C3AED;}
-.sch-cell.S-대휴2{background:#F5F3FF;color:#6D28D9;border:1px solid rgba(124,58,237,.25);}
+.sch-cell.S-대휴 {background:#E9D5FF;color:#6B21A8;}
+.sch-cell.S-대휴반{background:#F3E8FF;color:#7C3AED;}
+.sch-cell.S-대휴2{background:#EEF2FF;color:#4F46E5;border:1px solid rgba(79,70,229,.25);}
 .sch-cell.S-연차 {background:#FEF2F2;color:#DC2626;}
 .sch-cell.S-empty{background:transparent;color:var(--border);border:1px dashed var(--border);}
 .sch-cell.unconfirmed{opacity:.55;border:1.5px dashed currentColor;}
@@ -265,6 +265,9 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
   display:flex;align-items:center;gap:12px;
   margin-bottom:8px;box-shadow:var(--sh);
 }
+.dayoff-card.clickable{cursor:pointer;transition:all .15s;}
+.dayoff-card.clickable:hover{border-color:var(--purple);box-shadow:var(--sh2);}
+.dayoff-card .dayoff-help{font-size:11px;color:var(--text3);margin-top:2px;}
 .dayoff-hours{
   font-family:'Bebas Neue',sans-serif;
   font-size:28px;letter-spacing:1px;color:var(--purple);
@@ -934,9 +937,9 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
 <span class="sch-cell S-출근">출근</span>
 <span class="sch-cell S-휴무">휴무</span>
-<span class="sch-cell S-대휴">대휴(전)</span>
-<span class="sch-cell S-대휴반">대휴(반)</span>
-<span class="sch-cell S-대휴2">대휴(2h)</span>
+<span class="sch-cell S-대휴">대전</span><span style="font-size:11px;color:var(--text3);align-self:center;">전일</span>
+<span class="sch-cell S-대휴반">대반</span><span style="font-size:11px;color:var(--text3);align-self:center;">반일</span>
+<span class="sch-cell S-대휴2">대2</span><span style="font-size:11px;color:var(--text3);align-self:center;">2시간</span>
 <span class="sch-cell S-연차">연차</span>
 <span style="font-size:11px;color:var(--text3);margin-left:4px;align-self:center;">점선=희망 / 실선=확정</span>
 </div>
@@ -1024,7 +1027,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 <button class="sch-modal-btn" onclick="setSchType('휴무')" style="padding:14px;border-radius:var(--r);border:1.5px solid #94A3B8;background:#F1F5F9;color:#64748B;font-size:14px;font-weight:700;cursor:pointer;">휴무</button>
 <button class="sch-modal-btn" onclick="setSchType('대휴')" style="padding:14px;border-radius:var(--r);border:1.5px solid #7C3AED;background:#F3E8FF;color:#7C3AED;font-size:14px;font-weight:700;cursor:pointer;">대휴 (전일)</button>
 <button class="sch-modal-btn" onclick="setSchType('대휴반')" style="padding:14px;border-radius:var(--r);border:1.5px solid #7C3AED;background:#EDE9FE;color:#7C3AED;font-size:14px;font-weight:700;cursor:pointer;">대휴 (반일)</button>
-<button class="sch-modal-btn" onclick="setSchType('대휴2')" style="padding:14px;border-radius:var(--r);border:1.5px solid #6D28D9;background:#F5F3FF;color:#6D28D9;font-size:14px;font-weight:700;cursor:pointer;">대휴 (2시간)</button>
+<button class="sch-modal-btn" onclick="setSchType('대휴2')" style="padding:14px;border-radius:var(--r);border:1.5px solid #4F46E5;background:#EEF2FF;color:#4F46E5;font-size:14px;font-weight:700;cursor:pointer;">대휴 (2시간)</button>
 <button class="sch-modal-btn" onclick="setSchType('연차')" style="padding:14px;border-radius:var(--r);border:1.5px solid #DC2626;background:#FEF2F2;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;">연차</button>
 <button class="sch-modal-btn" onclick="setSchType('')" style="padding:14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text3);font-size:14px;font-weight:700;cursor:pointer;">비우기</button>
 </div>
@@ -1060,6 +1063,11 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 <button class="dayoff-h-btn" onclick="setDayoffHour(3,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">3시간</button>
 <button class="dayoff-h-btn" onclick="setDayoffHour(4,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">4시간</button>
 <button class="dayoff-h-btn" onclick="setDayoffHour(8,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">8시간(1일)</button>
+</div>
+<div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+  <input class="form-input" type="number" id="dayoff-hour-custom" min="0" step="0.5" placeholder="직접 입력 예: 1.5"
+    style="flex:1;font-size:13px;padding:7px 10px;" oninput="setDayoffCustomHour()">
+  <span style="font-size:12px;color:var(--text3);">시간</span>
 </div>
 </div>
 <div class="form-group">
@@ -1222,6 +1230,7 @@ function closePopup() {
   clearTimeout(_popupTimer);
   // popup-box를 원래 구조로 복원 (showIssuesSummary 등이 덮어쓴 경우 대비)
   const box = document.getElementById('popup-box');
+  if(box){ box.style.maxWidth='360px'; box.style.width=''; }
   if(box && !box.querySelector('#popup-icon')) {
     box.innerHTML = `
       <div id="popup-icon">✅</div>
@@ -1507,7 +1516,8 @@ function showIssuesSummary() {
 // 스케줄 관리
 // ══════════════════════════════════════
 const SCH_TYPES = ['출근','휴무','대휴','대휴반','대휴2','연차'];
-const SCH_LABEL = { '출근':'출근','휴무':'휴무','대휴':'대휴(전)','대휴반':'대휴(반)','대휴2':'대휴(2h)','연차':'연차' };
+const SCH_LABEL = { '출근':'출근','휴무':'휴무','대휴':'대휴(전일)','대휴반':'대휴(반일)','대휴2':'대휴(2시간)','연차':'연차' };
+const SCH_SHORT_LABEL = { '출근':'출근','휴무':'휴무','대휴':'대전','대휴반':'대반','대휴2':'대2','연차':'연차' };
 
 let schYear  = new Date().getFullYear();
 let schMonth = new Date().getMonth();
@@ -1601,6 +1611,8 @@ function openDayoffModal(staff) {
   dayoffModalState = { staff, type:'적립', hours:0 };
   document.getElementById('dayoff-modal-title').textContent = `${staff} 대휴 내역`;
   document.getElementById('dayoff-memo').value = '';
+  const customHourEl = document.getElementById('dayoff-hour-custom');
+  if(customHourEl) customHourEl.value = '';
   setDayoffType('적립', document.getElementById('dayoff-type-earn'));
   document.querySelectorAll('.dayoff-h-btn').forEach(b => {
     b.style.borderColor='var(--border)';b.style.background='var(--surface2)';b.style.color='var(--text2)';
@@ -1626,10 +1638,22 @@ function setDayoffHour(h, btn) {
   btn.style.borderColor='var(--purple)';btn.style.background='var(--purple-l)';btn.style.color='var(--purple)';btn.style.fontWeight='700';
 }
 
+function setDayoffCustomHour() {
+  const el = document.getElementById('dayoff-hour-custom');
+  const v = el ? parseFloat(el.value) : 0;
+  dayoffModalState.hours = isNaN(v) ? 0 : v;
+  document.querySelectorAll('.dayoff-h-btn').forEach(b => {
+    b.style.borderColor='var(--border)';b.style.background='var(--surface2)';b.style.color='var(--text2)';b.style.fontWeight='400';
+  });
+}
+
 function saveDayoff() {
-  const { staff, type, hours } = dayoffModalState;
+  const { staff, type } = dayoffModalState;
+  const customHourEl = document.getElementById('dayoff-hour-custom');
+  const customHours = customHourEl && customHourEl.value ? parseFloat(customHourEl.value) : 0;
+  const hours = customHours > 0 ? customHours : parseFloat(dayoffModalState.hours || 0);
   if(!staff) return;
-  if(!hours) { showToast('시간을 선택해주세요'); return; }
+  if(!hours || hours <= 0) { showToast('시간을 선택하거나 직접 입력해주세요'); return; }
   dayoffLogs.push({
     id: Date.now(),
     staff, date: fmt(new Date()),
@@ -1651,7 +1675,10 @@ function dayoffModalClose() {
 function getDayoffBalance(staff) {
   return dayoffLogs
     .filter(l => l.staff === staff)
-    .reduce((sum, l) => l.type==='적립' ? sum+l.hours : sum-l.hours, 0);
+    .reduce((sum, l) => {
+      const h = parseFloat(l.hours) || 0;
+      return l.type==='적립' ? sum+h : sum-h;
+    }, 0);
 }
 
 function renderSchedule() {
@@ -1698,7 +1725,7 @@ function renderSchedule() {
       } else {
         const sch = schedules.find(s => s.staff===staff && s.date===ds);
         const cellClass = sch ? `S-${sch.type}${sch.confirmed?'':' unconfirmed'}` : 'S-empty';
-        const label = sch ? (SCH_LABEL[sch.type]||sch.type).slice(0,2) : '+';
+        const label = sch ? (SCH_SHORT_LABEL[sch.type] || (SCH_LABEL[sch.type]||sch.type).slice(0,2)) : '+';
         tbody += `<td onclick="clickSchCell('${staff}','${ds}')">
           <span class="sch-cell ${cellClass}">${label}</span>
         </td>`;
@@ -1713,6 +1740,66 @@ function renderSchedule() {
   renderDayoffList();
 }
 
+
+function escapeHtml(v) {
+  return String(v ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function formatHourLabel(v) {
+  const n = parseFloat(v) || 0;
+  return Number.isInteger(n) ? `${n}시간` : `${n.toFixed(1).replace(/\.0$/,'')}시간`;
+}
+
+function showDayoffDetail(staff) {
+  const logs = dayoffLogs
+    .filter(l => l.staff === staff)
+    .sort((a,b) => String(b.date || b.createdAt || '').localeCompare(String(a.date || a.createdAt || '')) || String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+
+  const earned = logs.filter(l => l.type === '적립').reduce((s,l)=>s+(parseFloat(l.hours)||0),0);
+  const used   = logs.filter(l => l.type === '사용').reduce((s,l)=>s+(parseFloat(l.hours)||0),0);
+  const balance = earned - used;
+
+  const rows = logs.length ? logs.map(l => {
+    const isEarn = l.type === '적립';
+    const color = isEarn ? 'var(--green)' : 'var(--red)';
+    const bg = isEarn ? 'var(--green-l)' : 'var(--red-l)';
+    const sign = isEarn ? '+' : '-';
+    const when = escapeHtml(l.date || normalizeDate(l.createdAt) || '-');
+    const memo = escapeHtml(l.memo || '사유 메모 없음');
+    return `<div style="text-align:left;border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;margin-bottom:8px;background:var(--surface);">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <span style="font-size:11px;font-weight:800;padding:2px 7px;border-radius:999px;background:${bg};color:${color};">${escapeHtml(l.type)}</span>
+        <span style="font-size:13px;font-weight:800;color:${color};">${sign}${formatHourLabel(l.hours)}</span>
+        <span style="margin-left:auto;font-size:11px;color:var(--text3);">${when}</span>
+      </div>
+      <div style="font-size:13px;color:var(--text);line-height:1.5;">${memo}</div>
+      ${l.createdAt ? `<div style="font-size:11px;color:var(--text3);margin-top:4px;">등록: ${escapeHtml(l.createdAt)}</div>` : ''}
+    </div>`;
+  }).join('') : `<div style="font-size:13px;color:var(--text3);padding:18px 0;">등록된 대휴 내역이 없어요</div>`;
+
+  const box = document.getElementById('popup-box');
+  const overlay = document.getElementById('popup-overlay');
+  if(!box || !overlay) return;
+  box.style.maxWidth = '520px';
+  box.style.width = 'min(520px,92vw)';
+  box.innerHTML = `
+    <div style="font-size:22px;margin-bottom:8px;">🕒</div>
+    <div style="font-size:16px;font-weight:800;margin-bottom:4px;">${escapeHtml(staff)} 대휴 내역</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0 16px;">
+      <div style="background:var(--green-l);border-radius:var(--r);padding:9px 8px;"><div style="font-size:11px;color:var(--text3);">적립</div><div style="font-size:18px;font-weight:800;color:var(--green);">${formatHourLabel(earned)}</div></div>
+      <div style="background:var(--red-l);border-radius:var(--r);padding:9px 8px;"><div style="font-size:11px;color:var(--text3);">사용</div><div style="font-size:18px;font-weight:800;color:var(--red);">${formatHourLabel(used)}</div></div>
+      <div style="background:var(--purple-l);border-radius:var(--r);padding:9px 8px;"><div style="font-size:11px;color:var(--text3);">잔여</div><div style="font-size:18px;font-weight:800;color:var(--purple);">${formatHourLabel(balance)}</div></div>
+    </div>
+    <div style="max-height:360px;overflow-y:auto;">${rows}</div>
+    <button onclick="closePopup()" style="margin-top:16px;width:100%;padding:10px;background:var(--accent);color:#fff;border-radius:var(--r);font-size:14px;font-weight:700;border:none;cursor:pointer;">닫기</button>`;
+  overlay.classList.add('show');
+}
+
 function renderDayoffList() {
   const el = document.getElementById('dayoff-list');
   if(!el) return;
@@ -1721,20 +1808,21 @@ function renderDayoffList() {
     const days  = Math.floor(balance / 8);
     const hours = balance % 8;
     const balStr = days > 0
-      ? `${days}일 ${hours>0?hours+'시간':''}`
-      : `${hours}시간`;
+      ? `${days}일 ${hours>0?formatHourLabel(hours):''}`
+      : formatHourLabel(hours);
     const canEdit = isManager();
-    return `<div class="dayoff-card">
+    return `<div class="dayoff-card clickable" onclick="showDayoffDetail('${staff}')" title="대휴 상세 내역 보기">
       <div class="dayoff-hours" style="color:${balance>0?'var(--purple)':'var(--text3)'};">
-        ${balance}h
+        ${formatHourLabel(balance).replace('시간','h')}
       </div>
       <div style="flex:1;">
         <div style="font-size:14px;font-weight:700;">${staff}</div>
         <div style="font-size:12px;color:var(--text3);">잔여 ${balance>0?balStr:'없음'}</div>
+        <div class="dayoff-help">클릭해서 적립/사용 사유 확인</div>
       </div>
       ${canEdit ? `
       <div style="display:flex;gap:6px;">
-        <button class="icon-btn" onclick="openDayoffModal('${staff}')" title="대휴 추가/차감"
+        <button class="icon-btn" onclick="event.stopPropagation();openDayoffModal('${staff}')" title="대휴 추가/차감"
           style="background:var(--purple-l);color:var(--purple);border-color:rgba(124,58,237,.2);">+</button>
       </div>` : ''}
     </div>`;
