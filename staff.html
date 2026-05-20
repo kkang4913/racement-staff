@@ -2310,7 +2310,7 @@ function renderStore(){
 // 리뷰 트래커
 // ══════════════════════════════════════
 function addReview(){const date=document.getElementById('rv-date').value,pay=parseInt(document.getElementById('rv-pay').value)||0,rev=parseInt(document.getElementById('rv-rev').value)||0;if(!date){showToast('날짜를 선택해주세요');return;}if(pay===0){showToast('결제 건수를 입력해주세요');return;}if(rev>pay){showToast('리뷰 건수가 결제 건수보다 많아요');return;}const rate=pay>0?parseFloat((rev/pay*100).toFixed(1)):0;reviewEntries.push({id:Date.now(),date,pay,rev,rate});save('racement_reviews',reviewEntries);scheduleAutoSave('reviews');document.getElementById('rv-pay').value='';document.getElementById('rv-rev').value='';renderReview();renderHome();showToast('✅ 리뷰 입력됨');}
-function delReview(id){if(!confirm('삭제할까요?'))return;reviewEntries=reviewEntries.filter(e=>e.id!==id);save('racement_reviews',reviewEntries);scheduleAutoSave('reviews');renderReview();renderHome();}
+function delReview(id){if(!confirm('삭제할까요?'))return;const targetId=String(id);reviewEntries=reviewEntries.filter(e=>String(e.id)!==targetId);save('racement_reviews',reviewEntries);scheduleAutoSave('reviews');renderReview();renderHome();showToast('🗑 리뷰 기록 삭제됨');}
 function renderReview(){
   updateMonthNavLabel('review');const selMonth=getMonthStr('review');
   const mData=reviewEntries.filter(e=>getDate(e).startsWith(selMonth));
@@ -2321,7 +2321,7 @@ function renderReview(){
   const naverBtn=document.getElementById('naver-review-btn');if(naverBtn&&NAVER_REVIEW_URL)naverBtn.href=NAVER_REVIEW_URL;
   const el=document.getElementById('rv-list');if(!el)return;
   const recent=[...reviewEntries].sort((a,b)=>getDate(b).localeCompare(getDate(a))).slice(0,20);
-  el.innerHTML=recent.length?recent.map(e=>{const r=e.pay>0?parseFloat((e.rev/e.pay*100).toFixed(1)):0;const col=r>=goalRate?'var(--green)':r>=goalRate*.7?'var(--amber)':'var(--red)';return`<div class="item-card"><div class="item-body"><div class="item-title">${getDate(e)}</div><div class="item-meta">결제 ${e.pay}건 · 리뷰 ${e.rev}건 · <span style="color:${col};font-weight:700;">${r}%</span></div></div><div class="item-actions"><button class="icon-btn" onclick="delReview(${e.id})">🗑</button></div></div>`;}).join(''):`<div class="empty-state"><div class="empty-icon">⭐</div><div class="empty-text">입력된 기록이 없어요</div></div>`;
+  el.innerHTML=recent.length?recent.map(e=>{const r=e.pay>0?parseFloat((e.rev/e.pay*100).toFixed(1)):0;const col=r>=goalRate?'var(--green)':r>=goalRate*.7?'var(--amber)':'var(--red)';return`<div class="item-card"><div class="item-body"><div class="item-title">${getDate(e)}</div><div class="item-meta">결제 ${e.pay}건 · 리뷰 ${e.rev}건 · <span style="color:${col};font-weight:700;">${r}%</span></div></div><div class="item-actions"><button class="icon-btn" onclick="delReview('${String(e.id).replace(/\'/g,\"\\\'\")}')">🗑</button></div></div>`;}).join(''):`<div class="empty-state"><div class="empty-icon">⭐</div><div class="empty-text">입력된 기록이 없어요</div></div>`;
 }
 
 // ══════════════════════════════════════
