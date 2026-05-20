@@ -1115,7 +1115,7 @@ const GS_SHEETS = {
   issues:'미구매이슈', storeIssues:'매장이슈', reviews:'리뷰트래커',
   discounts:'제휴할인', calendar:'일정_RAW', snsEntries:'SNS유입',
   cash:'현금시재', productIssues:'제품이슈',
-  schedule:'스케줄', dayoff:'대휴내역',
+  schedule:'스케줄', dayoff:'대휴내역', visitors:'방문고객',
 };
 const GS_COL_MAP = {
   issues:     {id:'고유ID',tags:'이유태그',memo:'메모내용',staff:'담당자',time:'등록일시'},
@@ -1127,6 +1127,7 @@ const GS_COL_MAP = {
   productIssues: {id:'고유ID',brand:'브랜드',product:'제품명',issueType:'이슈유형',memo:'상세내용',urgency:'중요도',done:'완료여부',doneDate:'완료일',staff:'담당자',createdAt:'등록일시'},
   schedule:      {id:'고유ID',staff:'스태프',date:'날짜',type:'구분',confirmed:'확정여부',registeredBy:'등록자',createdAt:'등록일시'},
   dayoff:        {id:'고유ID',staff:'스태프',date:'날짜',type:'구분',hours:'시간',memo:'메모',createdAt:'등록일시'},
+  visitors:      {date:'날짜',total:'총방문',s11_13:'11-13시',s13_15:'13-15시',s15_17:'15-17시',s17_19:'17-19시',s19_20:'19-20시'},
   // calendar: 일정_RAW(calToRawRows)와 일정_VIEW(calToViewRows)로 분리 저장 — GS_COL_MAP 불필요
 };
 const STAFF_LIST = ['강승호(점장)','신경대','허시현','윤승태','손우형'];
@@ -1301,7 +1302,7 @@ function switchView(name,navEl){
 // ══════════════════════════════════════
 // 데이터
 // ══════════════════════════════════════
-let issues=[],storeIssues=[],reviewEntries=[],discountEntries=[],calEvents=[],snsEntries=[];
+let issues=[],storeIssues=[],reviewEntries=[],discountEntries=[],calEvents=[],snsEntries=[],visitorEntries=[];
 function loadAll(){
   issues         =load('racement_issues');
   storeIssues    =load('racement_store_issues');
@@ -1313,6 +1314,7 @@ function loadAll(){
   productIssues  =load('racement_product_issues');
   schedules      =load('racement_schedule', []);
   dayoffLogs     =load('racement_dayoff_logs', []);
+  visitorEntries = visitorRowsFromData(load(VISITOR_KEY, {}));
 }
 
 // ══════════════════════════════════════
@@ -2001,19 +2003,72 @@ function changePin(staff, newPin) {
 // 방문 고객 카운터
 // ══════════════════════════════════════
 const VISITOR_KEY = 'racement_visitors';
+const VISITOR_SLOTS = [
+  { key:'s11_13', label:'11-13시', emoji:'🕚', color:'#F59E0B' },
+  { key:'s13_15', label:'13-15시', emoji:'🕐', color:'#3B82F6' },
+  { key:'s15_17', label:'15-17시', emoji:'🕒', color:'#8B5CF6' },
+  { key:'s17_19', label:'17-19시', emoji:'🕔', color:'#10B981' },
+  { key:'s19_20', label:'19-20시', emoji:'🕖', color:'#64748B' },
+];
+
+function emptyVisitorDay() {
+  const obj = { total:0 };
+  VISITOR_SLOTS.forEach(s => obj[s.key] = 0);
+  return obj;
+}
+
+function parseVisitorInt(v) {
+  return parseInt(String(v ?? '').replace(/[^0-9-]/g,''), 10) || 0;
+}
+
+function normalizeVisitorDay(day) {
+  const normalized = emptyVisitorDay();
+  if(day && typeof day === 'object') {
+    VISITOR_SLOTS.forEach(s => normalized[s.key] = parseVisitorInt(day[s.key]));
+    const slotSum = VISITOR_SLOTS.reduce((sum,s) => sum + normalized[s.key], 0);
+    normalized.total = parseVisitorInt(day.total) || slotSum;
+  }
+  return normalized;
+}
+
+function visitorRowsFromData(data) {
+  return Object.entries(data || {})
+    .filter(([date]) => normalizeDate(date))
+    .sort((a,b) => normalizeDate(a[0]).localeCompare(normalizeDate(b[0])))
+    .map(([date, day]) => {
+      const d = normalizeVisitorDay(day);
+      return {
+        date: normalizeDate(date),
+        total: d.total,
+        s11_13: d.s11_13,
+        s13_15: d.s13_15,
+        s15_17: d.s15_17,
+        s17_19: d.s17_19,
+        s19_20: d.s19_20,
+      };
+    });
+}
+
+function saveVisitorData(data) {
+  save(VISITOR_KEY, data);
+  visitorEntries = visitorRowsFromData(data);
+  scheduleAutoSave('visitors');
+}
 
 function getVisitorData() {
   const data = load(VISITOR_KEY, {});
   const today = fmt(new Date());
-  if(!data[today]) data[today] = { total:0, morning:0, afternoon:0, evening:0 };
+  data[today] = normalizeVisitorDay(data[today]);
   return { data, today };
 }
 
 function getTimeSlot() {
   const h = new Date().getHours();
-  if(h < 12) return 'morning';
-  if(h < 18) return 'afternoon';
-  return 'evening';
+  if(h < 13) return 's11_13';
+  if(h < 15) return 's13_15';
+  if(h < 17) return 's15_17';
+  if(h < 19) return 's17_19';
+  return 's19_20';
 }
 
 function addVisitor() {
@@ -2021,9 +2076,8 @@ function addVisitor() {
   const slot = getTimeSlot();
   data[today].total++;
   data[today][slot]++;
-  save(VISITOR_KEY, data);
+  saveVisitorData(data);
 
-  // 버튼 애니메이션
   const btn = document.getElementById('visitor-btn');
   if(btn) {
     btn.style.transform = 'scale(0.93)';
@@ -2042,7 +2096,7 @@ function removeVisitor() {
   const slot = getTimeSlot();
   data[today].total = Math.max(0, data[today].total - 1);
   data[today][slot] = Math.max(0, data[today][slot] - 1);
-  save(VISITOR_KEY, data);
+  saveVisitorData(data);
   renderVisitor();
 }
 
@@ -2050,38 +2104,30 @@ function renderVisitor() {
   const { data, today } = getVisitorData();
   const d = data[today];
 
-  // 날짜 표시
   const dateEl = document.getElementById('visitor-date');
   if(dateEl) {
     const now = new Date();
     const days = ['일','월','화','수','목','금','토'];
-    dateEl.textContent = `${now.getMonth()+1}/${now.getDate()}(${days[now.getDay()]})`;
+    dateEl.textContent = `${now.getMonth()+1}/${now.getDate()}(${days[now.getDay()]}) · 2시간 단위`;
   }
 
-  // 총 카운트
   const countEl = document.getElementById('visitor-count');
   if(countEl) countEl.textContent = d.total;
 
-  // 시간대별 바
   const barsEl = document.getElementById('visitor-time-bars');
   if(barsEl) {
-    const slots = [
-      { key:'morning',   label:'오전', emoji:'🌅', color:'#F59E0B' },
-      { key:'afternoon', label:'오후', emoji:'☀️',  color:'#3B82F6' },
-      { key:'evening',   label:'저녁', emoji:'🌙', color:'#8B5CF6' },
-    ];
-    const max = Math.max(d.morning, d.afternoon, d.evening, 1);
+    const max = Math.max(...VISITOR_SLOTS.map(s => d[s.key] || 0), 1);
     const curSlot = getTimeSlot();
-    barsEl.innerHTML = slots.map(s => `
+    barsEl.innerHTML = VISITOR_SLOTS.map(s => `
       <div style="margin-bottom:8px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
           <span style="font-size:12px;color:${s.key===curSlot?s.color:'var(--text3)'};font-weight:${s.key===curSlot?'700':'400'};">
             ${s.emoji} ${s.label}
           </span>
-          <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:${s.color};">${d[s.key]}명</span>
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:${s.color};">${d[s.key]||0}명</span>
         </div>
         <div style="background:var(--surface2);border-radius:4px;height:6px;overflow:hidden;">
-          <div style="width:${Math.round(d[s.key]/max*100)}%;height:100%;background:${s.color};border-radius:4px;transition:width .3s;"></div>
+          <div style="width:${Math.round((d[s.key]||0)/max*100)}%;height:100%;background:${s.color};border-radius:4px;transition:width .3s;"></div>
         </div>
       </div>`).join('');
   }
@@ -2717,7 +2763,7 @@ async function gsSave(key){
   }
 
   // 나머지 데이터 저장
-  const dataMap={issues,storeIssues,reviews:reviewEntries,discounts:discountEntries,snsEntries,cash:cashEntries,productIssues,schedule:schedules,dayoff:dayoffLogs};
+  const dataMap={issues,storeIssues,reviews:reviewEntries,discounts:discountEntries,snsEntries,cash:cashEntries,productIssues,schedule:schedules,dayoff:dayoffLogs,visitors:visitorEntries};
   const raw=dataMap[key]||[];
   const data=toGsRows(key,raw);
   try{
@@ -2775,6 +2821,26 @@ async function gsLoad(key){
           staff:      r['담당자']||'',
         }));
         save('racement_sns_entries',snsEntries); break;
+      case 'visitors': {
+        const visitorData = {};
+        data.forEach(r => {
+          const date = normalizeDate(String(r['날짜']||''));
+          if(!date) return;
+          visitorData[date] = {
+            total:  parseVisitorInt(r['총방문']),
+            s11_13: parseVisitorInt(r['11-13시']),
+            s13_15: parseVisitorInt(r['13-15시']),
+            s15_17: parseVisitorInt(r['15-17시']),
+            s17_19: parseVisitorInt(r['17-19시']),
+            s19_20: parseVisitorInt(r['19-20시']),
+          };
+          const slotSum = VISITOR_SLOTS.reduce((sum,s) => sum + parseVisitorInt(visitorData[date][s.key]), 0);
+          if(!visitorData[date].total) visitorData[date].total = slotSum;
+        });
+        save(VISITOR_KEY, visitorData);
+        visitorEntries = visitorRowsFromData(visitorData);
+        break;
+      }
       case 'cash':
         cashEntries=data.map(r=>({
           id:    r['고유ID']||Date.now(),
