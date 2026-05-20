@@ -194,7 +194,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 @keyframes popIn{from{transform:scale(.85);opacity:0;}to{transform:scale(1);opacity:1;}}
 /* ══ 홈 ══ */
 .home-view{flex:1;overflow-y:auto;padding:24px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;align-content:start;}
-.home-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:20px;box-shadow:var(--sh);cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.home-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;box-shadow:var(--sh);cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
 .home-card:hover{box-shadow:var(--sh2);border-color:var(--border2);}
 .home-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
 .home-card.issues::before{background:var(--accent);}
@@ -203,9 +203,9 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 .home-card.discount::before{background:var(--purple);}
 .home-card.product::before{ background:#EA580C; }
 .home-card.sns::before{background:var(--pink);}
-.home-card-icon{font-size:24px;margin-bottom:10px;}
+.home-card-icon{font-size:20px;margin-bottom:6px;}
 .home-card-name{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px;}
-.home-card-val{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:1px;color:var(--text);line-height:1;}
+.home-card-val{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--text);line-height:1;}
 .home-card.issues .home-card-val{color:var(--accent);}
 .home-card.store .home-card-val{color:var(--red);}
 .home-card.review .home-card-val{color:var(--green);}
@@ -500,12 +500,14 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
   <!-- ══ 홈 ══ -->
   <div class="view active" id="view-home">
     <div class="home-view">
+
+      <!-- 6개 요약 카드 -->
       <div class="home-card issues" onclick="switchView('issues',document.querySelector('[onclick*=issues]'))">
         <div class="home-card-icon">💬</div>
         <div class="home-card-name">미구매 이슈</div>
         <div class="home-card-val" id="home-issues-count">0</div>
         <div class="home-card-sub">오늘 등록</div>
-        <div style="margin-top:6px;font-size:12px;color:var(--text3);">이번 달 <span id="home-issues-month" style="font-weight:700;color:var(--accent);">0</span>건</div>
+        <div style="margin-top:4px;font-size:11px;color:var(--text3);">이번 달 <span id="home-issues-month" style="font-weight:700;color:var(--accent);">0</span>건</div>
       </div>
       <div class="home-card store" onclick="switchView('store',document.querySelector('[onclick*=store]'))">
         <div class="home-card-icon">🏪</div>
@@ -513,7 +515,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
         <div class="home-card-val" id="home-store-count">0</div>
         <div class="home-card-sub" id="home-store-sub">미완료</div>
       </div>
-      <div class="home-card product" onclick="switchView('product',document.querySelector('[onclick*=product]'))" style="cursor:pointer;">
+      <div class="home-card product" onclick="switchView('product',document.querySelector('[onclick*=product]'))">
         <div class="home-card-icon">📦</div>
         <div class="home-card-name">제품 이슈</div>
         <div class="home-card-val" id="home-product-count" style="color:#EA580C;">0</div>
@@ -530,7 +532,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
         <div class="home-card-name">SNS 유입</div>
         <div class="home-card-val" id="home-sns-count">0</div>
         <div class="home-card-sub">오늘 유입</div>
-        <div style="margin-top:6px;font-size:12px;color:var(--text3);">이번 달 <span id="home-sns-month" style="font-weight:700;color:var(--pink);">0</span>명</div>
+        <div style="margin-top:4px;font-size:11px;color:var(--text3);">이번 달 <span id="home-sns-month" style="font-weight:700;color:var(--pink);">0</span>명</div>
       </div>
       <div class="home-card discount" onclick="switchView('discount',document.querySelector('[onclick*=discount]'))">
         <div class="home-card-icon">🏷</div>
@@ -538,37 +540,45 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
         <div class="home-card-val" id="home-discount-count" style="color:var(--purple);">0</div>
         <div class="home-card-sub">이번 달</div>
       </div>
+
+      <!-- 제품 이슈 3카드 (풀워이드) -->
+      <div id="home-product-list" style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;"></div>
+
       <!-- 방문 고객 카운터 -->
-      <div style="grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:20px 24px;box-shadow:var(--sh);">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px 20px;box-shadow:var(--sh);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div style="font-size:12px;font-weight:700;color:var(--text2);">👥 오늘 방문 고객</div>
           <div style="font-size:11px;color:var(--text3);" id="visitor-date"></div>
         </div>
         <div style="display:flex;align-items:center;gap:20px;">
-          <!-- 큰 카운터 버튼 -->
           <div style="flex:1;text-align:center;">
             <button id="visitor-btn" onclick="addVisitor()"
-              style="width:120px;height:120px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#3b82f6);
+              style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#3b82f6);
                      color:#fff;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(29,78,216,.3);
-                     transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;
-                     margin:0 auto;">
-              <div id="visitor-count" style="font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:2px;line-height:1;">0</div>
-              <div style="font-size:11px;font-weight:600;opacity:.85;margin-top:2px;">탭해서 +1</div>
+                     transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto;">
+              <div id="visitor-count" style="font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:2px;line-height:1;">0</div>
+              <div style="font-size:10px;font-weight:600;opacity:.85;margin-top:2px;">탭해서 +1</div>
             </button>
             <button onclick="removeVisitor()"
-              style="margin-top:10px;padding:5px 16px;background:var(--surface2);border:1px solid var(--border);
+              style="margin-top:8px;padding:4px 14px;background:var(--surface2);border:1px solid var(--border);
                      border-radius:20px;font-size:11px;color:var(--text3);cursor:pointer;">
               ↩ 취소 (-1)
             </button>
           </div>
-          <!-- 시간대별 현황 -->
-          <div style="flex:1;">
-            <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:10px;">시간대별</div>
+          <div style="flex:2;">
+            <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px;">시간대별</div>
             <div id="visitor-time-bars"></div>
           </div>
         </div>
       </div>
-    </div>
+
+      <!-- 다가오는 일정 -->
+      <div class="home-cal-card" onclick="switchView('calendar',document.querySelector('[onclick*=calendar]'))">
+        <div class="home-cal-title">📅 다가오는 일정</div>
+        <div id="home-cal-list"><div style="font-size:13px;color:var(--text3);">다가오는 일정이 없어요</div></div>
+      </div>
+
+    </div>    </div>
   </div>
 
   <!-- ══ 미구매 이슈 ══ -->
