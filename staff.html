@@ -254,6 +254,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 .sch-cell.S-휴무 {background:#F1F5F9;color:#94A3B8;}
 .sch-cell.S-대휴 {background:#F3E8FF;color:#7C3AED;}
 .sch-cell.S-대휴반{background:#EDE9FE;color:#7C3AED;}
+.sch-cell.S-대휴2{background:#F5F3FF;color:#6D28D9;border:1px solid rgba(124,58,237,.25);}
 .sch-cell.S-연차 {background:#FEF2F2;color:#DC2626;}
 .sch-cell.S-empty{background:transparent;color:var(--border);border:1px dashed var(--border);}
 .sch-cell.unconfirmed{opacity:.55;border:1.5px dashed currentColor;}
@@ -935,6 +936,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 <span class="sch-cell S-휴무">휴무</span>
 <span class="sch-cell S-대휴">대휴(전)</span>
 <span class="sch-cell S-대휴반">대휴(반)</span>
+<span class="sch-cell S-대휴2">대휴(2h)</span>
 <span class="sch-cell S-연차">연차</span>
 <span style="font-size:11px;color:var(--text3);margin-left:4px;align-self:center;">점선=희망 / 실선=확정</span>
 </div>
@@ -1022,6 +1024,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 <button class="sch-modal-btn" onclick="setSchType('휴무')" style="padding:14px;border-radius:var(--r);border:1.5px solid #94A3B8;background:#F1F5F9;color:#64748B;font-size:14px;font-weight:700;cursor:pointer;">휴무</button>
 <button class="sch-modal-btn" onclick="setSchType('대휴')" style="padding:14px;border-radius:var(--r);border:1.5px solid #7C3AED;background:#F3E8FF;color:#7C3AED;font-size:14px;font-weight:700;cursor:pointer;">대휴 (전일)</button>
 <button class="sch-modal-btn" onclick="setSchType('대휴반')" style="padding:14px;border-radius:var(--r);border:1.5px solid #7C3AED;background:#EDE9FE;color:#7C3AED;font-size:14px;font-weight:700;cursor:pointer;">대휴 (반일)</button>
+<button class="sch-modal-btn" onclick="setSchType('대휴2')" style="padding:14px;border-radius:var(--r);border:1.5px solid #6D28D9;background:#F5F3FF;color:#6D28D9;font-size:14px;font-weight:700;cursor:pointer;">대휴 (2시간)</button>
 <button class="sch-modal-btn" onclick="setSchType('연차')" style="padding:14px;border-radius:var(--r);border:1.5px solid #DC2626;background:#FEF2F2;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;">연차</button>
 <button class="sch-modal-btn" onclick="setSchType('')" style="padding:14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text3);font-size:14px;font-weight:700;cursor:pointer;">비우기</button>
 </div>
@@ -1503,8 +1506,8 @@ function showIssuesSummary() {
 // ══════════════════════════════════════
 // 스케줄 관리
 // ══════════════════════════════════════
-const SCH_TYPES = ['출근','휴무','대휴','대휴반','연차'];
-const SCH_LABEL = { '출근':'출근','휴무':'휴무','대휴':'대휴(전)','대휴반':'대휴(반)','연차':'연차' };
+const SCH_TYPES = ['출근','휴무','대휴','대휴반','대휴2','연차'];
+const SCH_LABEL = { '출근':'출근','휴무':'휴무','대휴':'대휴(전)','대휴반':'대휴(반)','대휴2':'대휴(2h)','연차':'연차' };
 
 let schYear  = new Date().getFullYear();
 let schMonth = new Date().getMonth();
