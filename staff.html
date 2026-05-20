@@ -219,6 +219,56 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 .home-cal-evt:last-child{border-bottom:none;}
 
 
+
+/* ══ 스케줄 ══ */
+.sch-table-wrap{overflow-x:auto;margin-bottom:16px;}
+.sch-table{border-collapse:collapse;width:100%;min-width:700px;}
+.sch-table th{
+  background:var(--surface2);border:1px solid var(--border);
+  padding:8px 6px;font-size:11px;font-weight:700;
+  color:var(--text3);text-align:center;white-space:nowrap;
+}
+.sch-table th.staff-col{width:80px;text-align:left;padding-left:12px;}
+.sch-table th.mon-col{background:#F1F5F9;color:#94A3B8;}
+.sch-table td{
+  border:1px solid var(--border);
+  padding:4px 3px;text-align:center;
+  vertical-align:middle;
+}
+.sch-table td.staff-name{
+  font-size:13px;font-weight:600;color:var(--text);
+  text-align:left;padding-left:12px;background:var(--surface);
+  white-space:nowrap;
+}
+.sch-table td.mon-cell{background:#F8FAFC;pointer-events:none;}
+.sch-cell{
+  display:inline-block;
+  padding:3px 6px;border-radius:4px;
+  font-size:11px;font-weight:700;
+  cursor:pointer;min-width:32px;
+  transition:all .1s;user-select:none;
+}
+.sch-cell:hover{filter:brightness(.92);}
+.sch-cell.S-출근 {background:#DCFCE7;color:#16A34A;}
+.sch-cell.S-휴무 {background:#F1F5F9;color:#94A3B8;}
+.sch-cell.S-대휴 {background:#F3E8FF;color:#7C3AED;}
+.sch-cell.S-대휴반{background:#EDE9FE;color:#7C3AED;}
+.sch-cell.S-연차 {background:#FEF2F2;color:#DC2626;}
+.sch-cell.S-empty{background:transparent;color:var(--border);border:1px dashed var(--border);}
+.sch-cell.unconfirmed{opacity:.55;border:1.5px dashed currentColor;}
+/* 대휴 현황 카드 */
+.dayoff-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r2);padding:14px 16px;
+  display:flex;align-items:center;gap:12px;
+  margin-bottom:8px;box-shadow:var(--sh);
+}
+.dayoff-hours{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:28px;letter-spacing:1px;color:var(--purple);
+  min-width:60px;text-align:center;
+}
+
 /* ══ 로딩 화면 ══ */
 #loading-screen{
   position:fixed;inset:0;z-index:8999;
@@ -438,6 +488,7 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
     <div class="nav-item" onclick="switchView('review',this)"><span class="nav-icon">⭐</span><span class="nav-label">리뷰 트래커</span></div>
     <div class="nav-item" onclick="switchView('sns',this)"><span class="nav-icon">📱</span><span class="nav-label">SNS 유입</span></div>
     <div class="nav-item" onclick="switchView('discount',this)"><span class="nav-icon">🏷</span><span class="nav-label">제휴 할인</span></div>
+    <div class="nav-item" onclick="switchView('schedule',this)"><span class="nav-icon">📋</span><span class="nav-label">스케줄</span></div>
     <div class="nav-divider"></div>
     <div class="nav-item" onclick="switchView('calendar',this)"><span class="nav-icon">📅</span><span class="nav-label">일정</span></div>
     <div class="nav-sync">
@@ -902,6 +953,101 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
     </div>
   </div>
 
+  <!-- ══ 스케줄 ══ -->
+  <div class="view" id="view-schedule">
+    <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+      <div class="view-header">
+        <div class="view-title">📋 스케줄</div>
+        <div class="view-kpi-row">
+          <div class="cal-header-nav">
+            <button class="cal-nav-btn" onclick="schPrev()">‹</button>
+            <div class="cal-title-label" id="sch-title"></div>
+            <button class="cal-nav-btn" onclick="schNext()">›</button>
+            <button class="cal-today-btn" onclick="schToday()">이번 달</button>
+          </div>
+        </div>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:20px 24px;">
+        <div class="sec-title">월간 스케줄</div>
+        <div class="sch-table-wrap"><table class="sch-table" id="sch-table"></table></div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+          <span class="sch-cell S-출근">출근</span>
+          <span class="sch-cell S-휴무">휴무</span>
+          <span class="sch-cell S-대휴">대휴(전)</span>
+          <span class="sch-cell S-대휴반">대휴(반)</span>
+          <span class="sch-cell S-연차">연차</span>
+          <span style="font-size:11px;color:var(--text3);margin-left:4px;align-self:center;">점선=희망 / 실선=확정</span>
+        </div>
+        <div class="sec-title">대휴 현황</div>
+        <div id="dayoff-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 스케줄 입력 모달 -->
+  <div class="modal-overlay" id="sch-modal" onclick="if(event.target===this)schModalClose()">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title" id="sch-modal-title">스케줄 입력</div>
+        <button class="modal-close" onclick="schModalClose()">✕</button>
+      </div>
+      <div style="font-size:13px;color:var(--text3);margin-bottom:16px;" id="sch-modal-info"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+        <button class="sch-modal-btn" onclick="setSchType('출근')" style="padding:14px;border-radius:var(--r);border:1.5px solid #16A34A;background:#DCFCE7;color:#16A34A;font-size:14px;font-weight:700;cursor:pointer;">출근</button>
+        <button class="sch-modal-btn" onclick="setSchType('휴무')" style="padding:14px;border-radius:var(--r);border:1.5px solid #94A3B8;background:#F1F5F9;color:#64748B;font-size:14px;font-weight:700;cursor:pointer;">휴무</button>
+        <button class="sch-modal-btn" onclick="setSchType('대휴')" style="padding:14px;border-radius:var(--r);border:1.5px solid #7C3AED;background:#F3E8FF;color:#7C3AED;font-size:14px;font-weight:700;cursor:pointer;">대휴 (전일)</button>
+        <button class="sch-modal-btn" onclick="setSchType('대휴반')" style="padding:14px;border-radius:var(--r);border:1.5px solid #7C3AED;background:#EDE9FE;color:#7C3AED;font-size:14px;font-weight:700;cursor:pointer;">대휴 (반일)</button>
+        <button class="sch-modal-btn" onclick="setSchType('연차')" style="padding:14px;border-radius:var(--r);border:1.5px solid #DC2626;background:#FEF2F2;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;">연차</button>
+        <button class="sch-modal-btn" onclick="setSchType('')" style="padding:14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text3);font-size:14px;font-weight:700;cursor:pointer;">비우기</button>
+      </div>
+      <div id="sch-confirm-row" style="display:none;margin-bottom:16px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="sch-confirm-check" style="width:16px;height:16px;cursor:pointer;">
+          <span>확정 처리 (점장)</span>
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-primary" onclick="saveSchCell()" style="flex:1;">저장</button>
+        <button class="btn-ghost" onclick="schModalClose()">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 대휴 모달 -->
+  <div class="modal-overlay" id="dayoff-modal" onclick="if(event.target===this)dayoffModalClose()">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title" id="dayoff-modal-title">대휴 내역</div>
+        <button class="modal-close" onclick="dayoffModalClose()">✕</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">구분</label>
+        <div style="display:flex;gap:8px;">
+          <button id="dayoff-type-earn" onclick="setDayoffType('적립',this)" style="flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--green);background:var(--green-l);color:var(--green);font-size:13px;font-weight:700;cursor:pointer;">▲ 적립</button>
+          <button id="dayoff-type-use" onclick="setDayoffType('사용',this)" style="flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;">▼ 사용</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">시간</label>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;" id="dayoff-hour-btns">
+          <button class="dayoff-h-btn" onclick="setDayoffHour(1,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">1시간</button>
+          <button class="dayoff-h-btn" onclick="setDayoffHour(2,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">2시간</button>
+          <button class="dayoff-h-btn" onclick="setDayoffHour(3,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">3시간</button>
+          <button class="dayoff-h-btn" onclick="setDayoffHour(4,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">4시간</button>
+          <button class="dayoff-h-btn" onclick="setDayoffHour(8,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">8시간(1일)</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">메모 (선택)</label>
+        <input class="form-input" type="text" id="dayoff-memo" placeholder="예: 일요일 행사 참여">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-primary" onclick="saveDayoff()" style="flex:1;">저장</button>
+        <button class="btn-ghost" onclick="dayoffModalClose()">취소</button>
+      </div>
+    </div>
+  </div>
+
 <!-- ══ 일정 ══ -->
   <div class="view" id="view-calendar">
     <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
@@ -995,6 +1141,8 @@ const GS_COL_MAP = {
   snsEntries: {id:'고유ID',date:'날짜',eventId:'이벤트ID',eventTitle:'이벤트명',inflow:'유입수',purchase:'구매건수',amount:'구매금액',staff:'담당자'},
   cash:          {id:'고유ID',date:'날짜',type:'구분',w50000:'5만',w10000:'1만',w5000:'5천',w1000:'1천',w500:'500원',w100:'100원',w50:'50원',w10:'10원',total:'합계',base:'기준시재',diff:'차액',memo:'비고',staff:'담당자'},
   productIssues: {id:'고유ID',brand:'브랜드',product:'제품명',issueType:'이슈유형',memo:'상세내용',urgency:'중요도',done:'완료여부',doneDate:'완료일',staff:'담당자',createdAt:'등록일시'},
+  schedule:      {id:'고유ID',staff:'스태프',date:'날짜',type:'구분',confirmed:'확정여부',registeredBy:'등록자',createdAt:'등록일시'},
+  dayoff:        {id:'고유ID',staff:'스태프',date:'날짜',type:'구분',hours:'시간',memo:'메모',createdAt:'등록일시'},
   // calendar: 일정_RAW(calToRawRows)와 일정_VIEW(calToViewRows)로 분리 저장 — GS_COL_MAP 불필요
 };;
 const STAFF_LIST = ['강승호(점장)','신경대','허시현','윤승태','손우형'];
@@ -1140,6 +1288,7 @@ function switchView(name,navEl){
   if(name==='issues')   renderIssues();
   if(name==='store')    renderStore();
   if(name==='product')  renderProductIssues();
+  if(name==='schedule') renderSchedule();
   if(name==='review')   renderReview();
   if(name==='discount') renderDiscount();
   if(name==='sns')      { if(!calEvents.length) loadAll(); renderSns(); }
@@ -1160,6 +1309,8 @@ function loadAll(){
   snsEntries     =load('racement_sns_entries');
   cashEntries    =load('racement_cash');
   productIssues  =load('racement_product_issues');
+  schedules      =load('racement_schedule', []);
+  dayoffLogs     =load('racement_dayoff_logs', []);
 }
 
 // ══════════════════════════════════════
@@ -1346,8 +1497,244 @@ function showIssuesSummary() {
 
 
 // ══════════════════════════════════════
-// PIN 로그인
+// 스케줄 관리
 // ══════════════════════════════════════
+const SCH_TYPES = ['출근','휴무','대휴','대휴반','연차'];
+const SCH_LABEL = { '출근':'출근','휴무':'휴무','대휴':'대휴(전)','대휴반':'대휴(반)','연차':'연차' };
+
+let schYear  = new Date().getFullYear();
+let schMonth = new Date().getMonth();
+let schedules  = []; // [{id, staff, date, type, confirmed, registeredBy, createdAt}]
+let dayoffLogs = []; // [{id, staff, date, type(적립/사용), hours, memo, createdAt}]
+
+// 모달 상태
+let schModalState = { staff:'', date:'' };
+let dayoffModalState = { staff:'', type:'적립', hours:0 };
+
+function loadSchedules()  { schedules  = load('racement_schedule',  []); }
+function loadDayoffLogs() { dayoffLogs = load('racement_dayoff_logs',[]); }
+function saveSchedules()  { save('racement_schedule',  schedules);  scheduleAutoSave('schedule'); }
+function saveDayoffLogs() { save('racement_dayoff_logs',dayoffLogs); scheduleAutoSave('dayoff'); }
+
+function schPrev()  { schMonth--; if(schMonth<0){schMonth=11;schYear--;} renderSchedule(); }
+function schNext()  { schMonth++; if(schMonth>11){schMonth=0;schYear++;} renderSchedule(); }
+function schToday() { schYear=new Date().getFullYear(); schMonth=new Date().getMonth(); renderSchedule(); }
+
+// 점장 여부 확인
+function isManager() {
+  const staff = getStaff();
+  return staff === '강승호(점장)';
+}
+
+// 스케줄 셀 클릭
+function clickSchCell(staff, date) {
+  const dayOfWeek = new Date(date).getDay();
+  if(dayOfWeek === 1) return; // 월요일 클릭 불가
+
+  schModalState = { staff, date };
+  const existing = schedules.find(s => s.staff===staff && s.date===date);
+
+  document.getElementById('sch-modal-title').textContent = `${staff} · ${date.slice(5)}`;
+  document.getElementById('sch-modal-info').textContent =
+    existing ? `현재: ${SCH_LABEL[existing.type]||existing.type} ${existing.confirmed?'(확정)':'(희망)'}` : '스케줄 없음';
+
+  // 점장만 확정 체크박스 표시
+  const confirmRow = document.getElementById('sch-confirm-row');
+  const confirmCheck = document.getElementById('sch-confirm-check');
+  if(isManager()) {
+    confirmRow.style.display = 'block';
+    confirmCheck.checked = existing ? existing.confirmed : false;
+  } else {
+    confirmRow.style.display = 'none';
+  }
+  document.getElementById('sch-modal').classList.add('open');
+}
+
+function setSchType(type) {
+  schModalState.selectedType = type;
+  document.querySelectorAll('.sch-modal-btn').forEach(b => b.style.opacity='0.5');
+  event.target.style.opacity='1';
+}
+
+function saveSchCell() {
+  const { staff, date, selectedType } = schModalState;
+  if(!staff || !date) return;
+
+  // 기존 스케줄 제거
+  schedules = schedules.filter(s => !(s.staff===staff && s.date===date));
+
+  if(selectedType) {
+    const confirmed = isManager()
+      ? document.getElementById('sch-confirm-check').checked
+      : false;
+    schedules.push({
+      id: Date.now(),
+      staff, date,
+      type: selectedType,
+      confirmed,
+      registeredBy: getStaff(),
+      createdAt: fmtDateTime(new Date()),
+    });
+  }
+
+  saveSchedules();
+  schModalClose();
+  renderSchedule();
+  showToast(`✅ ${staff} ${date.slice(5)} 스케줄 저장됨`);
+}
+
+function schModalClose() {
+  document.getElementById('sch-modal').classList.remove('open');
+  schModalState = { staff:'', date:'' };
+  document.querySelectorAll('.sch-modal-btn').forEach(b => b.style.opacity='1');
+}
+
+// 대휴 모달
+function openDayoffModal(staff) {
+  dayoffModalState = { staff, type:'적립', hours:0 };
+  document.getElementById('dayoff-modal-title').textContent = `${staff} 대휴 내역`;
+  document.getElementById('dayoff-memo').value = '';
+  setDayoffType('적립', document.getElementById('dayoff-type-earn'));
+  document.querySelectorAll('.dayoff-h-btn').forEach(b => {
+    b.style.borderColor='var(--border)';b.style.background='var(--surface2)';b.style.color='var(--text2)';
+  });
+  document.getElementById('dayoff-modal').classList.add('open');
+}
+
+function setDayoffType(type, btn) {
+  dayoffModalState.type = type;
+  document.getElementById('dayoff-type-earn').style.cssText =
+    type==='적립' ? 'flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--green);background:var(--green-l);color:var(--green);font-size:13px;font-weight:700;cursor:pointer;'
+                  : 'flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;';
+  document.getElementById('dayoff-type-use').style.cssText =
+    type==='사용' ? 'flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--red);background:var(--red-l);color:var(--red);font-size:13px;font-weight:700;cursor:pointer;'
+                 : 'flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;';
+}
+
+function setDayoffHour(h, btn) {
+  dayoffModalState.hours = h;
+  document.querySelectorAll('.dayoff-h-btn').forEach(b => {
+    b.style.borderColor='var(--border)';b.style.background='var(--surface2)';b.style.color='var(--text2)';b.style.fontWeight='400';
+  });
+  btn.style.borderColor='var(--purple)';btn.style.background='var(--purple-l)';btn.style.color='var(--purple)';btn.style.fontWeight='700';
+}
+
+function saveDayoff() {
+  const { staff, type, hours } = dayoffModalState;
+  if(!staff) return;
+  if(!hours) { showToast('시간을 선택해주세요'); return; }
+  dayoffLogs.push({
+    id: Date.now(),
+    staff, date: fmt(new Date()),
+    type, hours,
+    memo: document.getElementById('dayoff-memo').value.trim(),
+    createdAt: fmtDateTime(new Date()),
+  });
+  saveDayoffLogs();
+  dayoffModalClose();
+  renderSchedule();
+  showToast(`✅ ${staff} 대휴 ${type} ${hours}시간`);
+}
+
+function dayoffModalClose() {
+  document.getElementById('dayoff-modal').classList.remove('open');
+}
+
+// 대휴 잔여 시간 계산
+function getDayoffBalance(staff) {
+  return dayoffLogs
+    .filter(l => l.staff === staff)
+    .reduce((sum, l) => l.type==='적립' ? sum+l.hours : sum-l.hours, 0);
+}
+
+function renderSchedule() {
+  const titleEl = document.getElementById('sch-title');
+  if(titleEl) titleEl.textContent = `${schYear}년 ${schMonth+1}월`;
+
+  const table = document.getElementById('sch-table');
+  if(!table) return;
+
+  const daysInMonth = new Date(schYear, schMonth+1, 0).getDate();
+  const today = fmt(new Date());
+
+  // 헤더 생성 (날짜 행)
+  let thead = '<thead><tr><th class="staff-col">스태프</th>';
+  for(let d=1; d<=daysInMonth; d++) {
+    const ds = `${schYear}-${String(schMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const wd = new Date(schYear, schMonth, d).getDay();
+    const days = ['일','월','화','수','목','금','토'];
+    const isMon = wd === 1;
+    const isToday = ds === today;
+    const isSun = wd === 0;
+    const isSat = wd === 6;
+    const style = isMon ? 'mon-col' : '';
+    const color = isToday ? 'color:var(--accent);font-weight:900;'
+      : isSun ? 'color:var(--red);'
+      : isSat ? 'color:var(--accent);'
+      : '';
+    thead += `<th class="${style}" style="${color}min-width:36px;">${d}<br><span style="font-size:9px;">${days[wd]}</span></th>`;
+  }
+  thead += '</tr></thead>';
+
+  // 스태프별 행
+  let tbody = '<tbody>';
+  STAFF_LIST.forEach(staff => {
+    tbody += `<tr><td class="staff-name">${staff}</td>`;
+    for(let d=1; d<=daysInMonth; d++) {
+      const ds = `${schYear}-${String(schMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const wd = new Date(schYear, schMonth, d).getDay();
+      const isMon = wd === 1;
+
+      if(isMon) {
+        // 월요일 고정 휴무
+        tbody += `<td class="mon-cell"><span class="sch-cell S-휴무" style="opacity:.4;cursor:default;">휴</span></td>`;
+      } else {
+        const sch = schedules.find(s => s.staff===staff && s.date===ds);
+        const cellClass = sch ? `S-${sch.type}${sch.confirmed?'':' unconfirmed'}` : 'S-empty';
+        const label = sch ? (SCH_LABEL[sch.type]||sch.type).slice(0,2) : '+';
+        tbody += `<td onclick="clickSchCell('${staff}','${ds}')">
+          <span class="sch-cell ${cellClass}">${label}</span>
+        </td>`;
+      }
+    }
+    tbody += '</tr>';
+  });
+  tbody += '</tbody>';
+  table.innerHTML = thead + tbody;
+
+  // 대휴 현황
+  renderDayoffList();
+}
+
+function renderDayoffList() {
+  const el = document.getElementById('dayoff-list');
+  if(!el) return;
+  el.innerHTML = STAFF_LIST.map(staff => {
+    const balance = getDayoffBalance(staff);
+    const days  = Math.floor(balance / 8);
+    const hours = balance % 8;
+    const balStr = days > 0
+      ? `${days}일 ${hours>0?hours+'시간':''}`
+      : `${hours}시간`;
+    const canEdit = isManager();
+    return `<div class="dayoff-card">
+      <div class="dayoff-hours" style="color:${balance>0?'var(--purple)':'var(--text3)'};">
+        ${balance}h
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:14px;font-weight:700;">${staff}</div>
+        <div style="font-size:12px;color:var(--text3);">잔여 ${balance>0?balStr:'없음'}</div>
+      </div>
+      ${canEdit ? `
+      <div style="display:flex;gap:6px;">
+        <button class="icon-btn" onclick="openDayoffModal('${staff}')" title="대휴 추가/차감"
+          style="background:var(--purple-l);color:var(--purple);border-color:rgba(124,58,237,.2);">+</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+
 const PIN_TIMEOUT = 5 * 60 * 1000;
 const PIN_STORE   = 'racement_pins';
 const PIN_SESSION = 'racement_session';
@@ -2233,7 +2620,7 @@ async function gsSave(key){
   }
 
   // 나머지 데이터 저장
-  const dataMap={issues,storeIssues,reviews:reviewEntries,discounts:discountEntries,snsEntries,cash:cashEntries,productIssues};
+  const dataMap={issues,storeIssues,reviews:reviewEntries,discounts:discountEntries,snsEntries,cash:cashEntries,productIssues,schedule:schedules,dayoff:dayoffLogs};
   const raw=dataMap[key]||[];
   const data=toGsRows(key,raw);
   try{
@@ -2325,7 +2712,28 @@ async function gsLoad(key){
           createdAt: r['등록일시']||'',
         }));
         save('racement_product_issues',productIssues); break;
-      case 'calendar':
+      case 'schedule':
+        schedules=data.map(r=>({
+          id:           r['고유ID']||Date.now(),
+          staff:        r['스태프']||'',
+          date:         normalizeDate(String(r['날짜']||'')),
+          type:         r['구분']||'',
+          confirmed:    r['확정여부']==='확정',
+          registeredBy: r['등록자']||'',
+          createdAt:    r['등록일시']||'',
+        })).filter(s=>s.staff&&s.date);
+        save('racement_schedule',schedules); break;
+      case 'dayoff':
+        dayoffLogs=data.map(r=>({
+          id:       r['고유ID']||Date.now(),
+          staff:    r['스태프']||'',
+          date:     normalizeDate(String(r['날짜']||'')),
+          type:     r['구분']||'적립',
+          hours:    parseInt(r['시간'])||0,
+          memo:     r['메모']||'',
+          createdAt:r['등록일시']||'',
+        })).filter(d=>d.staff);
+        save('racement_dayoff_logs',dayoffLogs); break;
         // 일정_RAW는 순수 원본 데이터만 있음
         calEvents=data
           .filter(r=>r['날짜']&&r['제목'])
@@ -2406,7 +2814,7 @@ async function loadFromGs(){
   }
   renderHome();
   const cur=document.querySelector('.view.active');
-  if(cur){const id=cur.id;if(id==='view-issues')renderIssues();if(id==='view-store')renderStore();if(id==='view-product')renderProductIssues();if(id==='view-review')renderReview();if(id==='view-discount')renderDiscount();if(id==='view-sns')renderSns();if(id==='view-cash')renderCash();if(id==='view-calendar')renderCalendar();}
+  if(cur){const id=cur.id;if(id==='view-issues')renderIssues();if(id==='view-store')renderStore();if(id==='view-product')renderProductIssues();if(id==='view-review')renderReview();if(id==='view-discount')renderDiscount();if(id==='view-sns')renderSns();if(id==='view-cash')renderCash();if(id==='view-schedule')renderSchedule();if(id==='view-calendar')renderCalendar();}
 }
 
 async function gsPing(){
