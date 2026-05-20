@@ -519,7 +519,6 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
         <div class="home-card-val" id="home-product-count" style="color:#EA580C;">0</div>
         <div class="home-card-sub">미완료</div>
       </div>
-      <div id="home-product-list" style="grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;"></div>
       <div class="home-card review" onclick="switchView('review',document.querySelector('[onclick*=review]'))">
         <div class="home-card-icon">⭐</div>
         <div class="home-card-name">리뷰 전환율</div>
@@ -568,10 +567,6 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
             <div id="visitor-time-bars"></div>
           </div>
         </div>
-      </div>
-      <div class="home-cal-card" onclick="switchView('calendar',document.querySelector('[onclick*=calendar]'))">
-        <div class="home-cal-title">다가오는 일정</div>
-        <div id="home-cal-list"></div>
       </div>
     </div>
   </div>
@@ -1149,7 +1144,7 @@ const GS_COL_MAP = {
   schedule:      {id:'고유ID',staff:'스태프',date:'날짜',type:'구분',confirmed:'확정여부',registeredBy:'등록자',createdAt:'등록일시'},
   dayoff:        {id:'고유ID',staff:'스태프',date:'날짜',type:'구분',hours:'시간',memo:'메모',createdAt:'등록일시'},
   // calendar: 일정_RAW(calToRawRows)와 일정_VIEW(calToViewRows)로 분리 저장 — GS_COL_MAP 불필요
-};;
+};
 const STAFF_LIST = ['강승호(점장)','신경대','허시현','윤승태','손우형'];
 const DEFAULT_ISSUE_TAGS = ['사이즈 없음','원하는 모델 없음','가격 부담','타 채널 저렴','더 생각해보겠다','착화감 불만족','기타'];
 let ISSUE_TAGS = load('racement_issue_tags', null) || DEFAULT_ISSUE_TAGS.slice();
@@ -1169,22 +1164,26 @@ const NAVER_REVIEW_URL = 'https://map.naver.com/p/search/%EB%A0%88%EC%9D%B4%EC%8
 // ══════════════════════════════════════
 // 유틸
 // ══════════════════════════════════════
-const fmt = d => {
-  if(!d) return '';
-  const dt = d instanceof Date ? d : new Date(d);
-  if(isNaN(dt)) return '';
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth()+1).padStart(2,'0');
-  const day = String(dt.getDate()).padStart(2,'0');
-  return `${y}-${m}-${day}`;
-};
+const fmt = d => { if(!d) return ''; const dt=d instanceof Date?d:new Date(d); if(isNaN(dt)) return ''; return dt.toISOString().split('T')[0]; };
 const fmtDateTime = d => { if(!d) return ''; const dt=d instanceof Date?d:new Date(d); if(isNaN(dt)) return ''; return `${dt.getFullYear()}년 ${dt.getMonth()+1}월 ${dt.getDate()}일 ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`; };
 
 function normalizeDate(v) {
   if(!v) return ''; let s=String(v).trim();
   if(s==='null'||s==='undefined') return '';
-  // Google Sheets 날짜 셀이 JSON으로 넘어오면 UTC ISO(예: 2026-05-19T15:00:00.000Z)로 바뀔 수 있음.
-  // 여기서 T 앞부분만 자르면 한국 날짜가 하루 전으로 밀리므로, 브라우저 로컬 날짜로 다시 변환한다.
+
+  // 엑셀/구글 시트 날짜 시리얼 넘버 처리 (예: 46157.74444)
+  // 1900년 1월 1일 기준 경과 일수
+  if(/^\d{5}(\.\d+)?$/.test(s)) {
+    const serial = parseFloat(s);
+    if(serial > 40000 && serial < 60000) { // 2009~2064년 범위
+      const ms = (serial - 25569) * 86400000; // 25569 = 유닉스 에포크 기준 오프셋
+      const dt = new Date(ms);
+      if(!isNaN(dt)) return fmt(dt);
+    }
+  }
+
+  // Google Sheets가 날짜를 UTC ISO(예: 2026-05-19T15:00:00.000Z)로 변환할 수 있음.
+  // 단순히 T 앞만 자르면 한국시간 기준 날짜가 하루 밀릴 수 있어서 로컬 Date로 변환.
   if(/^\d{4}-\d{2}-\d{2}T/.test(s)) {
     const dt = new Date(s);
     if(!isNaN(dt)) return fmt(dt);
@@ -1205,18 +1204,6 @@ const getDate = o => {
   const raw = o.time || o.createdAt || '';
   return normalizeDate(String(raw));
 };
-
-function plainText(v) {
-  if(v === null || v === undefined) return '';
-  if(typeof v === 'object') return JSON.stringify(v);
-  return String(v);
-}
-
-function toNumber(v) {
-  if(v === null || v === undefined || v === '') return 0;
-  const n = Number(String(v).replace(/[^0-9.-]/g, ''));
-  return Number.isFinite(n) ? n : 0;
-}
 
 let _popupTimer;
 function showToast(msg, dur=2500) {
@@ -2023,7 +2010,6 @@ function renderVisitor() {
 }
 
 
-let siUrgency = 'urgent';
 let productIssues = [];
 let piUrgency = 'urgent';
 let piType = '재고불일치';
@@ -2259,7 +2245,7 @@ function quickCount(eventId, field, delta) {
   if(field === 'inflow')   state.inflow   = Math.max(0, state.inflow + delta);
   if(field === 'purchase') state.purchase = Math.max(0, state.purchase + delta);
   // 카운트 UI 갱신
-  const inflowEl   = document.getElementById(eventId === 'general' ? 'general-inflow-count' : `sns-${eventId}-inflow`);
+  const inflowEl   = document.getElementById(`sns-${eventId}-inflow`);
   const purchaseEl = document.getElementById(`sns-${eventId}-purchase`);
   if(inflowEl)   inflowEl.textContent   = state.inflow;
   if(purchaseEl) purchaseEl.textContent = state.purchase;
@@ -2304,7 +2290,6 @@ function delSnsEntry(id) {
   if(!confirm('삭제할까요?')) return;
   snsEntries = snsEntries.filter(e => e.id !== id);
   save('racement_sns_entries', snsEntries);
-  scheduleAutoSave('snsEntries');
   renderSns();
   renderHome();
 }
@@ -2575,18 +2560,7 @@ async function autoSaveWithRetry(key, attempt=1) {
 
 function toGsRows(key,data){
   const colMap=GS_COL_MAP[key]||{};
-  return data.map(item=>{
-    const row={};
-    Object.entries(colMap).forEach(([k,label])=>{
-      let v=item[k];
-      if(v===undefined||v===null)v='';
-      if(k==='done')v=v?'완료':'미완료';
-      if(k==='urgency')v=v==='urgent'?'긴급':'보통';
-      if(Array.isArray(v))v=v.join(',');
-      row[label]=plainText(v);
-    });
-    return row;
-  });
+  return data.map(item=>{const row={};Object.entries(colMap).forEach(([k,label])=>{let v=item[k];if(v===undefined||v===null)v='';if(k==='done')v=v?'완료':'미완료';if(k==='urgency')v=v==='urgent'?'긴급':'보통';if(Array.isArray(v))v=v.join(',');row[label]=v;});return row;});
 }
 
 function setGsStatus(status){const dot=document.getElementById('gs-dot'),log=document.getElementById('gs-log');if(dot)dot.className='gs-dot'+(status==='ok'?' ok':status==='err'?' err':'');if(log)log.textContent=status==='ok'?'연결됨':status==='err'?'오프라인':'';}
@@ -2706,10 +2680,10 @@ async function gsLoad(key){
         storeIssues=data.map(r=>({id:r['고유ID']||Date.now(),urgency:r['긴급도']==='긴급'?'urgent':'normal',title:r['이슈제목']||'',memo:r['상세내용']||'',staff:r['담당자']||'',done:(r['완료여부']==='완료'),doneDate:r['완료일']||null,createdAt:r['등록일시']||''}));
         save('racement_store_issues',storeIssues);break;
       case 'reviews':
-        reviewEntries=data.map(r=>({id:r['고유ID']||Date.now(),date:normalizeDate(r['날짜']||''),pay:toNumber(r['결제건수']),rev:toNumber(r['리뷰건수']),rate:toNumber(r['전환율'])}));
+        reviewEntries=data.map(r=>({id:r['고유ID']||Date.now(),date:normalizeDate(r['날짜']||''),pay:parseFloat(r['결제건수'])||0,rev:parseFloat(r['리뷰건수'])||0,rate:parseFloat(r['전환율'])||0}));
         save('racement_reviews',reviewEntries);break;
       case 'discounts':
-        discountEntries=data.map(r=>({id:r['고유ID']||Date.now(),date:normalizeDate(r['날짜']||''),type:r['유형']==='런콥 할인'?'runcop':'brand',product:r['제품명']||'',original:toNumber(r['정가']),rate:toNumber(r['할인율(%)']),amount:toNumber(r['할인금액']),final:toNumber(r['실결제금액']),staff:r['담당자']||''}));
+        discountEntries=data.map(r=>({id:r['고유ID']||Date.now(),date:normalizeDate(r['날짜']||''),type:r['유형']==='런콥 할인'?'runcop':'brand',product:r['제품명']||'',original:parseFloat(r['정가'])||0,rate:parseFloat(r['할인율(%)'])||0,amount:parseFloat(r['할인금액'])||0,final:parseFloat(r['실결제금액'])||0,staff:r['담당자']||''}));
         save('racement_discounts',discountEntries);break;
       case 'snsEntries':
         snsEntries=data.map(r=>({
@@ -2717,9 +2691,9 @@ async function gsLoad(key){
           date:       normalizeDate(String(r['날짜']||'')),
           eventId:    r['이벤트ID']||'',
           eventTitle: r['이벤트명']||'일반 SNS 유입',
-          inflow:     toNumber(r['유입수']),
-          purchase:   toNumber(r['구매건수']),
-          amount:     toNumber(r['구매금액']),
+          inflow:     parseInt(r['유입수'])||0,
+          purchase:   parseInt(r['구매건수'])||0,
+          amount:     parseInt(r['구매금액'])||0,
           staff:      r['담당자']||'',
         }));
         save('racement_sns_entries',snsEntries); break;
@@ -2728,17 +2702,17 @@ async function gsLoad(key){
           id:    r['고유ID']||Date.now(),
           date:  normalizeDate(String(r['날짜']||'')),
           type:  r['구분']||'마감',
-          w50000:toNumber(r['5만']),
-          w10000:toNumber(r['1만']),
-          w5000: toNumber(r['5천']),
-          w1000: toNumber(r['1천']),
-          w500:  toNumber(r['500원']),
-          w100:  toNumber(r['100원']),
-          w50:   toNumber(r['50원']),
-          w10:   toNumber(r['10원']),
-          total: toNumber(r['합계']),
-          base:  toNumber(r['기준시재']),
-          diff:  toNumber(r['차액']),
+          w50000:parseInt(r['5만'])||0,
+          w10000:parseInt(r['1만'])||0,
+          w5000: parseInt(r['5천'])||0,
+          w1000: parseInt(r['1천'])||0,
+          w500:  parseInt(r['500원'])||0,
+          w100:  parseInt(r['100원'])||0,
+          w50:   parseInt(r['50원'])||0,
+          w10:   parseInt(r['10원'])||0,
+          total: parseInt(r['합계'])||0,
+          base:  parseInt(r['기준시재'])||0,
+          diff:  parseInt(r['차액'])||0,
           memo:  r['비고']||'',
           staff: r['담당자']||'',
         }));
@@ -2757,21 +2731,6 @@ async function gsLoad(key){
           createdAt: r['등록일시']||'',
         }));
         save('racement_product_issues',productIssues); break;
-      case 'calendar':
-        calEvents=data
-          .filter(r=>r['날짜']&&r['제목'])
-          .map(r=>({
-            id:      r['고유ID']||Date.now(),
-            date:    normalizeDate(String(r['날짜']||'')),
-            endDate: normalizeDate(String(r['종료일']||'')),
-            title:   r['제목']||'',
-            cat:     catRev[r['카테고리']]||'other',
-            memo:    r['메모']||'',
-            snsGoal: toNumber(r['SNS목표']),
-            snsUrl:  r['SNS_URL']||'',
-          }))
-          .filter(e=>e.date&&e.title);
-        save('racement_calendar',calEvents); break;
       case 'schedule':
         schedules=data.map(r=>({
           id:           r['고유ID']||Date.now(),
@@ -2789,11 +2748,26 @@ async function gsLoad(key){
           staff:    r['스태프']||'',
           date:     normalizeDate(String(r['날짜']||'')),
           type:     r['구분']||'적립',
-          hours:    toNumber(r['시간']),
+          hours:    parseInt(r['시간'])||0,
           memo:     r['메모']||'',
           createdAt:r['등록일시']||'',
         })).filter(d=>d.staff);
         save('racement_dayoff_logs',dayoffLogs); break;
+        // 일정_RAW는 순수 원본 데이터만 있음
+        calEvents=data
+          .filter(r=>r['날짜']&&r['제목'])
+          .map(r=>({
+            id:      r['고유ID']||Date.now(),
+            date:    normalizeDate(String(r['날짜']||'')),
+            endDate: normalizeDate(String(r['종료일']||'')),
+            title:   r['제목']||'',
+            cat:     catRev[r['카테고리']]||'other',
+            memo:    r['메모']||'',
+            snsGoal: parseInt(r['SNS목표'])||0,
+            snsUrl:  r['SNS_URL']||'',
+          }))
+          .filter(e=>e.date&&e.title);
+        save('racement_calendar',calEvents);break;
     }
   }catch(e){setGsStatus('err');console.warn('GS load error:',key,e.message);throw new Error(`${GS_SHEETS[key]} 불러오기 실패: ${e.message}`);}
 }
@@ -2854,7 +2828,6 @@ async function loadFromGs(){
     if(i<keys.length-1) await new Promise(r=>setTimeout(r,300));
   }
 
-  gsLoadHadFailure = failed.length > 0;
   if(failed.length){
     setGsStatus('err');if(log)log.textContent='일부 실패';
     showPopup('❌ 불러오기 실패', failed.join('\n'), 'manual');
@@ -3148,7 +3121,6 @@ function delCash(id) {
   if(!confirm('삭제할까요?')) return;
   cashEntries = cashEntries.filter(e => e.id !== id);
   saveCashLocal();
-  scheduleAutoSave('cash');
   renderCash();
 }
 
