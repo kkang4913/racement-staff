@@ -2763,6 +2763,7 @@ async function gsLoad(key){
           createdAt:r['등록일시']||'',
         })).filter(d=>d.staff);
         save('racement_dayoff_logs',dayoffLogs); break;
+      case 'calendar':
         // 일정_RAW는 순수 원본 데이터만 있음
         calEvents=data
           .filter(r=>r['날짜']&&r['제목'])
