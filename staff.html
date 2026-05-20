@@ -1,12 +1,13 @@
 <!DOCTYPE html>
+
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#FAFAF8">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="#FAFAF8" name="theme-color"/>
 <title>RACEMENT 스태프</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&amp;family=Noto+Sans+KR:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
 <style>
 :root {
   --bg:#FAFAF8; --surface:#FFFFFF; --surface2:#F4F3EF;
@@ -393,745 +394,707 @@ select.form-input{cursor:pointer;-webkit-appearance:none;appearance:none;}
 .sns-stat-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px;text-align:center;box-shadow:var(--sh);}
 .sns-stat-val{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;line-height:1;}
 .sns-stat-label{font-size:11px;color:var(--text3);margin-top:3px;}
+
+
+/* === layout safety patch: keep every tab inside the right content area === */
+.layout{flex:1;display:flex;overflow:hidden;min-height:0;}
+.main{flex:1;min-width:0;min-height:0;overflow:hidden;display:flex;flex-direction:column;}
+.main > .view{display:none !important;flex:1;min-width:0;min-height:0;overflow:hidden;}
+.main > .view.active{display:flex !important;}
+.main > #view-home.active{display:flex !important;}
+.modal-overlay{position:fixed;}
 </style>
 </head>
 <body>
-
 <!-- PIN 로그인 화면 -->
 <div id="pin-screen">
-  <div class="pin-wrap">
-    <div class="pin-logo">RACE<span>MENT</span></div>
-    <div class="pin-subtitle">스태프 대시보드</div>
-
-    <!-- 스태프 선택 화면 -->
-    <div id="pin-step-select">
-      <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:14px;">담당자를 선택하세요</div>
-      <div class="pin-staff-grid" id="pin-staff-grid"></div>
-    </div>
-
-    <!-- PIN 입력 화면 -->
-    <div id="pin-step-input" style="display:none;">
-      <div class="pin-name" id="pin-selected-name"></div>
-      <div class="pin-dots" id="pin-dots">
-        <div class="pin-dot"></div>
-        <div class="pin-dot"></div>
-        <div class="pin-dot"></div>
-        <div class="pin-dot"></div>
-      </div>
-      <div class="pin-keypad">
-        <button class="pin-key" onclick="pinKey('1')">1</button>
-        <button class="pin-key" onclick="pinKey('2')">2</button>
-        <button class="pin-key" onclick="pinKey('3')">3</button>
-        <button class="pin-key" onclick="pinKey('4')">4</button>
-        <button class="pin-key" onclick="pinKey('5')">5</button>
-        <button class="pin-key" onclick="pinKey('6')">6</button>
-        <button class="pin-key" onclick="pinKey('7')">7</button>
-        <button class="pin-key" onclick="pinKey('8')">8</button>
-        <button class="pin-key" onclick="pinKey('9')">9</button>
-        <button class="pin-key empty"></button>
-        <button class="pin-key" onclick="pinKey('0')">0</button>
-        <button class="pin-key del" onclick="pinDel()">⌫</button>
-      </div>
-      <div class="pin-error-msg" id="pin-error"></div>
-      <button class="pin-back-btn" onclick="pinBack()">← 담당자 다시 선택</button>
-    </div>
-  </div>
+<div class="pin-wrap">
+<div class="pin-logo">RACE<span>MENT</span></div>
+<div class="pin-subtitle">스태프 대시보드</div>
+<!-- 스태프 선택 화면 -->
+<div id="pin-step-select">
+<div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:14px;">담당자를 선택하세요</div>
+<div class="pin-staff-grid" id="pin-staff-grid"></div>
 </div>
-
+<!-- PIN 입력 화면 -->
+<div id="pin-step-input" style="display:none;">
+<div class="pin-name" id="pin-selected-name"></div>
+<div class="pin-dots" id="pin-dots">
+<div class="pin-dot"></div>
+<div class="pin-dot"></div>
+<div class="pin-dot"></div>
+<div class="pin-dot"></div>
+</div>
+<div class="pin-keypad">
+<button class="pin-key" onclick="pinKey('1')">1</button>
+<button class="pin-key" onclick="pinKey('2')">2</button>
+<button class="pin-key" onclick="pinKey('3')">3</button>
+<button class="pin-key" onclick="pinKey('4')">4</button>
+<button class="pin-key" onclick="pinKey('5')">5</button>
+<button class="pin-key" onclick="pinKey('6')">6</button>
+<button class="pin-key" onclick="pinKey('7')">7</button>
+<button class="pin-key" onclick="pinKey('8')">8</button>
+<button class="pin-key" onclick="pinKey('9')">9</button>
+<button class="pin-key empty"></button>
+<button class="pin-key" onclick="pinKey('0')">0</button>
+<button class="pin-key del" onclick="pinDel()">⌫</button>
+</div>
+<div class="pin-error-msg" id="pin-error"></div>
+<button class="pin-back-btn" onclick="pinBack()">← 담당자 다시 선택</button>
+</div>
+</div>
+</div>
 <div id="toast"></div>
-
 <!-- 로딩 화면 -->
 <div id="loading-screen">
-  <div class="loading-wrap">
-    <div class="loading-logo">RACE<span>MENT</span></div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:24px;">데이터를 불러오고 있어요</div>
-    <div class="loading-progress-wrap">
-      <div class="loading-progress-bar" id="loading-bar"></div>
-    </div>
-    <div class="loading-step" id="loading-step">준비 중...</div>
-    <div class="loading-count" id="loading-count"></div>
-  </div>
+<div class="loading-wrap">
+<div class="loading-logo">RACE<span>MENT</span></div>
+<div style="font-size:12px;color:var(--text3);margin-bottom:24px;">데이터를 불러오고 있어요</div>
+<div class="loading-progress-wrap">
+<div class="loading-progress-bar" id="loading-bar"></div>
 </div>
-
+<div class="loading-step" id="loading-step">준비 중...</div>
+<div class="loading-count" id="loading-count"></div>
+</div>
+</div>
 <!-- 중앙 팝업 -->
 <div id="popup-overlay" onclick="if(event.target===this)closePopup()">
-  <div id="popup-box">
-    <div id="popup-icon">✅</div>
-    <div id="popup-msg">완료</div>
-    <div id="popup-sub"></div>
-    <button id="popup-close" onclick="closePopup()">확인</button>
-  </div>
+<div id="popup-box">
+<div id="popup-icon">✅</div>
+<div id="popup-msg">완료</div>
+<div id="popup-sub"></div>
+<button id="popup-close" onclick="closePopup()">확인</button>
 </div>
-
+</div>
 <!-- 상단 헤더 -->
 <div class="topbar">
-  <div class="logo">RACE<span>MENT</span></div>
-  <div class="topbar-date" id="top-date"></div>
-  <div class="topbar-right">
-    <button id="current-user-badge" onclick="resetSession();showPinScreen();">👤 미로그인</button>
-    <select class="staff-select" id="global-staff" style="display:none;"><option value="">담당자 선택</option></select>
-    <span id="gs-log"></span>
-    <div class="gs-dot" id="gs-dot"></div>
-    <button class="gs-btn" onclick="syncAll()">☁ 저장</button>
-    <button class="gs-btn" onclick="loadFromGs()" style="background:var(--surface2);color:var(--text2);border-color:var(--border);">📥 불러오기</button>
-  </div>
+<div class="logo">RACE<span>MENT</span></div>
+<div class="topbar-date" id="top-date"></div>
+<div class="topbar-right">
+<button id="current-user-badge" onclick="resetSession();showPinScreen();">👤 미로그인</button>
+<select class="staff-select" id="global-staff" style="display:none;"><option value="">담당자 선택</option></select>
+<span id="gs-log"></span>
+<div class="gs-dot" id="gs-dot"></div>
+<button class="gs-btn" onclick="syncAll()">☁ 저장</button>
+<button class="gs-btn" onclick="loadFromGs()" style="background:var(--surface2);color:var(--text2);border-color:var(--border);">📥 불러오기</button>
 </div>
-
+</div>
 <div class="layout">
-  <!-- 좌측 네비 -->
-  <nav class="sidenav">
-    <div class="nav-item active" onclick="switchView('home',this)"><span class="nav-icon">🏠</span><span class="nav-label">홈</span></div>
-    <div class="nav-item" onclick="switchView('cash',this)"><span class="nav-icon">💰</span><span class="nav-label">현금 시재</span></div>
-    <div class="nav-item" onclick="switchView('issues',this)"><span class="nav-icon">💬</span><span class="nav-label">미구매 이슈</span></div>
-    <div class="nav-item" onclick="switchView('store',this)"><span class="nav-icon">🏪</span><span class="nav-label">매장 이슈</span><span class="nav-badge" id="store-badge"></span></div>
-    <div class="nav-item" onclick="switchView('product',this)"><span class="nav-icon">📦</span><span class="nav-label">제품 이슈</span><span class="nav-badge" id="product-badge"></span></div>
-    <div class="nav-item" onclick="switchView('review',this)"><span class="nav-icon">⭐</span><span class="nav-label">리뷰 트래커</span></div>
-    <div class="nav-item" onclick="switchView('sns',this)"><span class="nav-icon">📱</span><span class="nav-label">SNS 유입</span></div>
-    <div class="nav-item" onclick="switchView('discount',this)"><span class="nav-icon">🏷</span><span class="nav-label">제휴 할인</span></div>
-    <div class="nav-item" onclick="switchView('schedule',this)"><span class="nav-icon">📋</span><span class="nav-label">스케줄</span></div>
-    <div class="nav-divider"></div>
-    <div class="nav-item" onclick="switchView('calendar',this)"><span class="nav-icon">📅</span><span class="nav-label">일정</span></div>
-    <div class="nav-sync">
-      <button class="nav-sync-btn" onclick="syncAll()" style="margin-bottom:6px;">☁ GS 저장</button>
-      <button class="nav-sync-btn" onclick="loadFromGs()">📥 GS 불러오기</button>
-    </div>
-  </nav>
-
-  <!-- ══ 홈 ══ -->
-  <div class="view active" id="view-home">
-    <div class="home-view">
-
-      <!-- 6개 요약 카드 -->
-      <div class="home-card issues" onclick="switchView('issues',document.querySelector('[onclick*=issues]'))">
-        <div class="home-card-icon">💬</div>
-        <div class="home-card-name">미구매 이슈</div>
-        <div class="home-card-val" id="home-issues-count">0</div>
-        <div class="home-card-sub">오늘 등록</div>
-        <div style="margin-top:4px;font-size:11px;color:var(--text3);">이번 달 <span id="home-issues-month" style="font-weight:700;color:var(--accent);">0</span>건</div>
-      </div>
-      <div class="home-card store" onclick="switchView('store',document.querySelector('[onclick*=store]'))">
-        <div class="home-card-icon">🏪</div>
-        <div class="home-card-name">매장 이슈</div>
-        <div class="home-card-val" id="home-store-count">0</div>
-        <div class="home-card-sub" id="home-store-sub">미완료</div>
-      </div>
-      <div class="home-card product" onclick="switchView('product',document.querySelector('[onclick*=product]'))">
-        <div class="home-card-icon">📦</div>
-        <div class="home-card-name">제품 이슈</div>
-        <div class="home-card-val" id="home-product-count" style="color:#EA580C;">0</div>
-        <div class="home-card-sub">미완료</div>
-      </div>
-      <div class="home-card review" onclick="switchView('review',document.querySelector('[onclick*=review]'))">
-        <div class="home-card-icon">⭐</div>
-        <div class="home-card-name">리뷰 전환율</div>
-        <div class="home-card-val" id="home-review-rate">—</div>
-        <div class="home-card-sub">이번 달</div>
-      </div>
-      <div class="home-card sns" onclick="switchView('sns',document.querySelector('[onclick*=sns]'))">
-        <div class="home-card-icon">📱</div>
-        <div class="home-card-name">SNS 유입</div>
-        <div class="home-card-val" id="home-sns-count">0</div>
-        <div class="home-card-sub">오늘 유입</div>
-        <div style="margin-top:4px;font-size:11px;color:var(--text3);">이번 달 <span id="home-sns-month" style="font-weight:700;color:var(--pink);">0</span>명</div>
-      </div>
-      <div class="home-card discount" onclick="switchView('discount',document.querySelector('[onclick*=discount]'))">
-        <div class="home-card-icon">🏷</div>
-        <div class="home-card-name">제휴 할인</div>
-        <div class="home-card-val" id="home-discount-count" style="color:var(--purple);">0</div>
-        <div class="home-card-sub">이번 달</div>
-      </div>
-
-      <!-- 제품 이슈 3카드 (풀워이드) -->
-      <div id="home-product-list" style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;"></div>
-
-      <!-- 방문 고객 카운터 -->
-      <div style="grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px 20px;box-shadow:var(--sh);">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <div style="font-size:12px;font-weight:700;color:var(--text2);">👥 오늘 방문 고객</div>
-          <div style="font-size:11px;color:var(--text3);" id="visitor-date"></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:20px;">
-          <div style="flex:1;text-align:center;">
-            <button id="visitor-btn" onclick="addVisitor()"
-              style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#3b82f6);
+<!-- 좌측 네비 -->
+<nav class="sidenav">
+<div class="nav-item active" onclick="switchView('home',this)"><span class="nav-icon">🏠</span><span class="nav-label">홈</span></div>
+<div class="nav-item" onclick="switchView('cash',this)"><span class="nav-icon">💰</span><span class="nav-label">현금 시재</span></div>
+<div class="nav-item" onclick="switchView('issues',this)"><span class="nav-icon">💬</span><span class="nav-label">미구매 이슈</span></div>
+<div class="nav-item" onclick="switchView('store',this)"><span class="nav-icon">🏪</span><span class="nav-label">매장 이슈</span><span class="nav-badge" id="store-badge"></span></div>
+<div class="nav-item" onclick="switchView('product',this)"><span class="nav-icon">📦</span><span class="nav-label">제품 이슈</span><span class="nav-badge" id="product-badge"></span></div>
+<div class="nav-item" onclick="switchView('review',this)"><span class="nav-icon">⭐</span><span class="nav-label">리뷰 트래커</span></div>
+<div class="nav-item" onclick="switchView('sns',this)"><span class="nav-icon">📱</span><span class="nav-label">SNS 유입</span></div>
+<div class="nav-item" onclick="switchView('discount',this)"><span class="nav-icon">🏷</span><span class="nav-label">제휴 할인</span></div>
+<div class="nav-item" onclick="switchView('schedule',this)"><span class="nav-icon">📋</span><span class="nav-label">스케줄</span></div>
+<div class="nav-divider"></div>
+<div class="nav-item" onclick="switchView('calendar',this)"><span class="nav-icon">📅</span><span class="nav-label">일정</span></div>
+<div class="nav-sync">
+<button class="nav-sync-btn" onclick="syncAll()" style="margin-bottom:6px;">☁ GS 저장</button>
+<button class="nav-sync-btn" onclick="loadFromGs()">📥 GS 불러오기</button>
+</div>
+</nav><main class="main" id="main-content"><div class="view active" id="view-home">
+<div class="home-view">
+<!-- 6개 요약 카드 -->
+<div class="home-card issues" onclick="switchView('issues',document.querySelector('[onclick*=issues]'))">
+<div class="home-card-icon">💬</div>
+<div class="home-card-name">미구매 이슈</div>
+<div class="home-card-val" id="home-issues-count">0</div>
+<div class="home-card-sub">오늘 등록</div>
+<div style="margin-top:4px;font-size:11px;color:var(--text3);">이번 달 <span id="home-issues-month" style="font-weight:700;color:var(--accent);">0</span>건</div>
+</div>
+<div class="home-card store" onclick="switchView('store',document.querySelector('[onclick*=store]'))">
+<div class="home-card-icon">🏪</div>
+<div class="home-card-name">매장 이슈</div>
+<div class="home-card-val" id="home-store-count">0</div>
+<div class="home-card-sub" id="home-store-sub">미완료</div>
+</div>
+<div class="home-card product" onclick="switchView('product',document.querySelector('[onclick*=product]'))">
+<div class="home-card-icon">📦</div>
+<div class="home-card-name">제품 이슈</div>
+<div class="home-card-val" id="home-product-count" style="color:#EA580C;">0</div>
+<div class="home-card-sub">미완료</div>
+</div>
+<div class="home-card review" onclick="switchView('review',document.querySelector('[onclick*=review]'))">
+<div class="home-card-icon">⭐</div>
+<div class="home-card-name">리뷰 전환율</div>
+<div class="home-card-val" id="home-review-rate">—</div>
+<div class="home-card-sub">이번 달</div>
+</div>
+<div class="home-card sns" onclick="switchView('sns',document.querySelector('[onclick*=sns]'))">
+<div class="home-card-icon">📱</div>
+<div class="home-card-name">SNS 유입</div>
+<div class="home-card-val" id="home-sns-count">0</div>
+<div class="home-card-sub">오늘 유입</div>
+<div style="margin-top:4px;font-size:11px;color:var(--text3);">이번 달 <span id="home-sns-month" style="font-weight:700;color:var(--pink);">0</span>명</div>
+</div>
+<div class="home-card discount" onclick="switchView('discount',document.querySelector('[onclick*=discount]'))">
+<div class="home-card-icon">🏷</div>
+<div class="home-card-name">제휴 할인</div>
+<div class="home-card-val" id="home-discount-count" style="color:var(--purple);">0</div>
+<div class="home-card-sub">이번 달</div>
+</div>
+<!-- 제품 이슈 3카드 (풀워이드) -->
+<div id="home-product-list" style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;"></div>
+<!-- 방문 고객 카운터 -->
+<div style="grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:16px 20px;box-shadow:var(--sh);">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+<div style="font-size:12px;font-weight:700;color:var(--text2);">👥 오늘 방문 고객</div>
+<div id="visitor-date" style="font-size:11px;color:var(--text3);"></div>
+</div>
+<div style="display:flex;align-items:center;gap:20px;">
+<div style="flex:1;text-align:center;">
+<button id="visitor-btn" onclick="addVisitor()" style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#3b82f6);
                      color:#fff;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(29,78,216,.3);
                      transition:all .15s;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto;">
-              <div id="visitor-count" style="font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:2px;line-height:1;">0</div>
-              <div style="font-size:10px;font-weight:600;opacity:.85;margin-top:2px;">탭해서 +1</div>
-            </button>
-            <button onclick="removeVisitor()"
-              style="margin-top:8px;padding:4px 14px;background:var(--surface2);border:1px solid var(--border);
+<div id="visitor-count" style="font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:2px;line-height:1;">0</div>
+<div style="font-size:10px;font-weight:600;opacity:.85;margin-top:2px;">탭해서 +1</div>
+</button>
+<button onclick="removeVisitor()" style="margin-top:8px;padding:4px 14px;background:var(--surface2);border:1px solid var(--border);
                      border-radius:20px;font-size:11px;color:var(--text3);cursor:pointer;">
               ↩ 취소 (-1)
             </button>
-          </div>
-          <div style="flex:2;">
-            <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px;">시간대별</div>
-            <div id="visitor-time-bars"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 다가오는 일정 -->
-      <div class="home-cal-card" onclick="switchView('calendar',document.querySelector('[onclick*=calendar]'))">
-        <div class="home-cal-title">📅 다가오는 일정</div>
-        <div id="home-cal-list"><div style="font-size:13px;color:var(--text3);">다가오는 일정이 없어요</div></div>
-      </div>
-
-    </div>    </div>
-  </div>
-
-  <!-- ══ 미구매 이슈 ══ -->
-  <div class="view" id="view-issues">
-    <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
-      <div class="view-header">
-        <div class="view-title">💬 미구매 이슈</div>
-        <div class="view-kpi-row">
-          <div class="view-kpi"><div class="view-kpi-val" id="iss-today">0</div><div class="view-kpi-label">오늘</div></div>
-          <div class="view-kpi"><div class="view-kpi-val" id="iss-week">0</div><div class="view-kpi-label">이번 주</div></div>
-          <div class="view-kpi"><div class="view-kpi-val" id="iss-month">0</div><div class="view-kpi-label" id="iss-month-label">이번 달</div></div>
-          <button onclick="showIssuesSummary()"
-            style="padding:6px 14px;border-radius:var(--r);background:var(--accent-l);color:var(--accent);border:1px solid var(--accent-b);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
+</div>
+<div style="flex:2;">
+<div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:8px;">시간대별</div>
+<div id="visitor-time-bars"></div>
+</div>
+</div>
+</div>
+<!-- 다가오는 일정 -->
+<div class="home-cal-card" onclick="switchView('calendar',document.querySelector('[onclick*=calendar]'))">
+<div class="home-cal-title">📅 다가오는 일정</div>
+<div id="home-cal-list"><div style="font-size:13px;color:var(--text3);">다가오는 일정이 없어요</div></div>
+</div>
+</div>
+</div><div class="view" id="view-issues">
+<div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+<div class="view-header">
+<div class="view-title">💬 미구매 이슈</div>
+<div class="view-kpi-row">
+<div class="view-kpi"><div class="view-kpi-val" id="iss-today">0</div><div class="view-kpi-label">오늘</div></div>
+<div class="view-kpi"><div class="view-kpi-val" id="iss-week">0</div><div class="view-kpi-label">이번 주</div></div>
+<div class="view-kpi"><div class="view-kpi-val" id="iss-month">0</div><div class="view-kpi-label" id="iss-month-label">이번 달</div></div>
+<button onclick="showIssuesSummary()" style="padding:6px 14px;border-radius:var(--r);background:var(--accent-l);color:var(--accent);border:1px solid var(--accent-b);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">
             📊 이달 요약
           </button>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <button class="month-nav-btn" onclick="changeMonth('issues',-1)">‹</button>
-            <span class="month-nav-label" id="iss-month-nav-label"></span>
-            <button class="month-nav-btn" onclick="changeMonth('issues',1)">›</button>
-            <button class="month-today-btn" onclick="goThisMonth('issues')">이번 달</button>
-          </div>
-        </div>
-      </div>
-      <div class="two-col">
-        <div class="col-form">
-          <div class="sec-title">새 이슈 등록</div>
-          <div class="form-group">
-            <label class="form-label">이유 선택 (복수 가능)</label>
-            <div class="tag-grid" id="iss-tags"></div>
-            <!-- 태그 추가 -->
-            <div style="display:flex;gap:6px;margin-top:10px;">
-              <input class="form-input" type="text" id="iss-new-tag"
-                placeholder="새 태그 입력..."
-                style="flex:1;font-size:12px;padding:6px 10px;"
-                onkeydown="if(event.key==='Enter')addIssueTag()">
-              <button onclick="addIssueTag()"
-                style="padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;white-space:nowrap;">
+<div style="display:flex;align-items:center;gap:6px;">
+<button class="month-nav-btn" onclick="changeMonth('issues',-1)">‹</button>
+<span class="month-nav-label" id="iss-month-nav-label"></span>
+<button class="month-nav-btn" onclick="changeMonth('issues',1)">›</button>
+<button class="month-today-btn" onclick="goThisMonth('issues')">이번 달</button>
+</div>
+</div>
+</div>
+<div class="two-col">
+<div class="col-form">
+<div class="sec-title">새 이슈 등록</div>
+<div class="form-group">
+<label class="form-label">이유 선택 (복수 가능)</label>
+<div class="tag-grid" id="iss-tags"></div>
+<!-- 태그 추가 -->
+<div style="display:flex;gap:6px;margin-top:10px;">
+<input class="form-input" id="iss-new-tag" onkeydown="if(event.key==='Enter')addIssueTag()" placeholder="새 태그 입력..." style="flex:1;font-size:12px;padding:6px 10px;" type="text"/>
+<button onclick="addIssueTag()" style="padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;white-space:nowrap;">
                 + 추가
               </button>
-            </div>
-            <div style="font-size:11px;color:var(--text3);margin-top:4px;">태그를 길게 누르면 삭제할 수 있어요</div>
-          </div>
-          <div class="form-group"><label class="form-label">메모 (선택)</label><textarea class="form-input" id="iss-memo" placeholder="추가 상황을 적어주세요..." rows="3"></textarea></div>
-          <button class="btn-primary" onclick="addIssue()">등록</button>
-        </div>
-        <div class="col-list">
-          <div class="sec-title" id="iss-list-title">오늘 등록 목록</div>
-          <div id="iss-list"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ 매장 이슈 ══ -->
-  <div class="view" id="view-store">
-    <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
-      <div class="view-header">
-        <div class="view-title">🏪 매장 이슈</div>
-        <div class="view-kpi-row">
-          <div class="view-kpi" style="border-top:2px solid var(--red);"><div class="view-kpi-val" id="si-urgent" style="color:var(--red);">0</div><div class="view-kpi-label">🔴 긴급</div></div>
-          <div class="view-kpi"><div class="view-kpi-val" id="si-open">0</div><div class="view-kpi-label">미완료</div></div>
-          <div class="view-kpi" style="border-top:2px solid var(--green);"><div class="view-kpi-val" id="si-done" style="color:var(--green);">0</div><div class="view-kpi-label">완료</div></div>
-        </div>
-      </div>
-      <div class="two-col">
-        <div class="col-form">
-          <div class="sec-title">이슈 등록</div>
-          <div class="form-group"><label class="form-label">긴급도</label>
-            <div class="urgency-row">
-              <button class="urgency-btn sel-urgent" data-u="urgent" onclick="setUrgency('urgent',this)">🔴 긴급</button>
-              <button class="urgency-btn" data-u="normal" onclick="setUrgency('normal',this)">🟡 보통</button>
-            </div>
-          </div>
-          <div class="form-group"><label class="form-label">이슈 제목 *</label><input class="form-input" id="si-title" type="text" placeholder="예: 3번 선반 파손, 영수증 용지 부족..."></div>
-          <div class="form-group"><label class="form-label">상세 내용 (선택)</label><textarea class="form-input" id="si-memo" placeholder="구체적인 내용..." rows="3"></textarea></div>
-          <button class="btn-primary" onclick="addStoreIssue()">등록</button>
-        </div>
-        <div class="col-list">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <div class="sec-title" style="margin-bottom:0;">미완료 이슈</div>
-            <button id="si-done-toggle" onclick="toggleStoreDoneView()"
-              style="font-size:11px;padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text3);cursor:pointer;">
+</div>
+<div style="font-size:11px;color:var(--text3);margin-top:4px;">태그를 길게 누르면 삭제할 수 있어요</div>
+</div>
+<div class="form-group"><label class="form-label">메모 (선택)</label><textarea class="form-input" id="iss-memo" placeholder="추가 상황을 적어주세요..." rows="3"></textarea></div>
+<button class="btn-primary" onclick="addIssue()">등록</button>
+</div>
+<div class="col-list">
+<div class="sec-title" id="iss-list-title">오늘 등록 목록</div>
+<div id="iss-list"></div>
+</div>
+</div>
+</div>
+</div><div class="view" id="view-store">
+<div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+<div class="view-header">
+<div class="view-title">🏪 매장 이슈</div>
+<div class="view-kpi-row">
+<div class="view-kpi" style="border-top:2px solid var(--red);"><div class="view-kpi-val" id="si-urgent" style="color:var(--red);">0</div><div class="view-kpi-label">🔴 긴급</div></div>
+<div class="view-kpi"><div class="view-kpi-val" id="si-open">0</div><div class="view-kpi-label">미완료</div></div>
+<div class="view-kpi" style="border-top:2px solid var(--green);"><div class="view-kpi-val" id="si-done" style="color:var(--green);">0</div><div class="view-kpi-label">완료</div></div>
+</div>
+</div>
+<div class="two-col">
+<div class="col-form">
+<div class="sec-title">이슈 등록</div>
+<div class="form-group"><label class="form-label">긴급도</label>
+<div class="urgency-row">
+<button class="urgency-btn sel-urgent" data-u="urgent" onclick="setUrgency('urgent',this)">🔴 긴급</button>
+<button class="urgency-btn" data-u="normal" onclick="setUrgency('normal',this)">🟡 보통</button>
+</div>
+</div>
+<div class="form-group"><label class="form-label">이슈 제목 *</label><input class="form-input" id="si-title" placeholder="예: 3번 선반 파손, 영수증 용지 부족..." type="text"/></div>
+<div class="form-group"><label class="form-label">상세 내용 (선택)</label><textarea class="form-input" id="si-memo" placeholder="구체적인 내용..." rows="3"></textarea></div>
+<button class="btn-primary" onclick="addStoreIssue()">등록</button>
+</div>
+<div class="col-list">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+<div class="sec-title" style="margin-bottom:0;">미완료 이슈</div>
+<button id="si-done-toggle" onclick="toggleStoreDoneView()" style="font-size:11px;padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text3);cursor:pointer;">
               완료 항목 보기
             </button>
-          </div>
-          <div id="si-list"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ 제품 이슈 ══ -->
-  <div class="view" id="view-product">
-    <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
-      <div class="view-header">
-        <div class="view-title">📦 제품 이슈</div>
-        <div class="view-kpi-row">
-          <div class="view-kpi" style="border-top:2px solid #EA580C;">
-            <div class="view-kpi-val" id="pi-urgent" style="color:#EA580C;">0</div>
-            <div class="view-kpi-label">🔴 긴급</div>
-          </div>
-          <div class="view-kpi">
-            <div class="view-kpi-val" id="pi-open">0</div>
-            <div class="view-kpi-label">미완료</div>
-          </div>
-          <div class="view-kpi" style="border-top:2px solid var(--green);">
-            <div class="view-kpi-val" id="pi-done" style="color:var(--green);">0</div>
-            <div class="view-kpi-label">완료</div>
-          </div>
-        </div>
-      </div>
-      <div class="two-col">
-        <div class="col-form">
-          <div class="sec-title">제품 이슈 등록</div>
-          <div class="input-row" style="margin-bottom:12px;">
-            <div>
-              <label class="form-label">브랜드</label>
-              <input class="form-input" type="text" id="pi-brand" placeholder="예: 호카, 나이키...">
-            </div>
-            <div>
-              <label class="form-label">중요도</label>
-              <div class="urgency-row">
-                <button class="urgency-btn sel-urgent" onclick="setPiUrgency('urgent',this)">🔴 긴급</button>
-                <button class="urgency-btn" onclick="setPiUrgency('normal',this)">🟡 일반</button>
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">제품명</label>
-            <input class="form-input" type="text" id="pi-product" placeholder="예: 본디8 265 블랙">
-          </div>
-          <div class="form-group">
-            <label class="form-label">이슈 유형</label>
-            <div style="display:flex;flex-wrap:wrap;gap:6px;" id="pi-type-row">
-              <button class="cal-cat-btn pi-type-btn sel-pi-type" data-type="재고불일치" onclick="setPiType('재고불일치',this)">재고불일치</button>
-              <button class="cal-cat-btn pi-type-btn" data-type="파손" onclick="setPiType('파손',this)">파손</button>
-              <button class="cal-cat-btn pi-type-btn" data-type="판매금지" onclick="setPiType('판매금지',this)">판매금지</button>
-              <button class="cal-cat-btn pi-type-btn" data-type="가격오류" onclick="setPiType('가격오류',this)">가격오류</button>
-              <button class="cal-cat-btn pi-type-btn" data-type="기타" onclick="setPiType('기타',this)">기타</button>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">상세 내용</label>
-            <textarea class="form-input" id="pi-memo" placeholder="예: ERP 재고 3개, 실재고 0개" rows="3"></textarea>
-          </div>
-          <button class="btn-primary" onclick="addProductIssue()">등록</button>
-        </div>
-        <div class="col-list">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <div class="sec-title" style="margin-bottom:0;">미완료 제품 이슈</div>
-            <button id="pi-done-toggle" onclick="toggleProductDoneView()"
-              style="font-size:11px;padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text3);cursor:pointer;">
+</div>
+<div id="si-list"></div>
+</div>
+</div>
+</div>
+</div><div class="view" id="view-product">
+<div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+<div class="view-header">
+<div class="view-title">📦 제품 이슈</div>
+<div class="view-kpi-row">
+<div class="view-kpi" style="border-top:2px solid #EA580C;">
+<div class="view-kpi-val" id="pi-urgent" style="color:#EA580C;">0</div>
+<div class="view-kpi-label">🔴 긴급</div>
+</div>
+<div class="view-kpi">
+<div class="view-kpi-val" id="pi-open">0</div>
+<div class="view-kpi-label">미완료</div>
+</div>
+<div class="view-kpi" style="border-top:2px solid var(--green);">
+<div class="view-kpi-val" id="pi-done" style="color:var(--green);">0</div>
+<div class="view-kpi-label">완료</div>
+</div>
+</div>
+</div>
+<div class="two-col">
+<div class="col-form">
+<div class="sec-title">제품 이슈 등록</div>
+<div class="input-row" style="margin-bottom:12px;">
+<div>
+<label class="form-label">브랜드</label>
+<input class="form-input" id="pi-brand" placeholder="예: 호카, 나이키..." type="text"/>
+</div>
+<div>
+<label class="form-label">중요도</label>
+<div class="urgency-row">
+<button class="urgency-btn sel-urgent" onclick="setPiUrgency('urgent',this)">🔴 긴급</button>
+<button class="urgency-btn" onclick="setPiUrgency('normal',this)">🟡 일반</button>
+</div>
+</div>
+</div>
+<div class="form-group">
+<label class="form-label">제품명</label>
+<input class="form-input" id="pi-product" placeholder="예: 본디8 265 블랙" type="text"/>
+</div>
+<div class="form-group">
+<label class="form-label">이슈 유형</label>
+<div id="pi-type-row" style="display:flex;flex-wrap:wrap;gap:6px;">
+<button class="cal-cat-btn pi-type-btn sel-pi-type" data-type="재고불일치" onclick="setPiType('재고불일치',this)">재고불일치</button>
+<button class="cal-cat-btn pi-type-btn" data-type="파손" onclick="setPiType('파손',this)">파손</button>
+<button class="cal-cat-btn pi-type-btn" data-type="판매금지" onclick="setPiType('판매금지',this)">판매금지</button>
+<button class="cal-cat-btn pi-type-btn" data-type="가격오류" onclick="setPiType('가격오류',this)">가격오류</button>
+<button class="cal-cat-btn pi-type-btn" data-type="기타" onclick="setPiType('기타',this)">기타</button>
+</div>
+</div>
+<div class="form-group">
+<label class="form-label">상세 내용</label>
+<textarea class="form-input" id="pi-memo" placeholder="예: ERP 재고 3개, 실재고 0개" rows="3"></textarea>
+</div>
+<button class="btn-primary" onclick="addProductIssue()">등록</button>
+</div>
+<div class="col-list">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+<div class="sec-title" style="margin-bottom:0;">미완료 제품 이슈</div>
+<button id="pi-done-toggle" onclick="toggleProductDoneView()" style="font-size:11px;padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;color:var(--text3);cursor:pointer;">
               완료 항목 보기
             </button>
-          </div>
-          <div id="pi-list"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ 리뷰 트래커 ══ -->
-  <div class="view" id="view-review">
-    <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
-      <div class="view-header">
-        <div class="view-title">⭐ 리뷰 트래커</div>
-        <div class="view-kpi-row">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <button class="month-nav-btn" onclick="changeMonth('review',-1)">‹</button>
-            <span class="month-nav-label" id="rv-month-nav-label"></span>
-            <button class="month-nav-btn" onclick="changeMonth('review',1)">›</button>
-            <button class="month-today-btn" onclick="goThisMonth('review')">이번 달</button>
-          </div>
-        </div>
-      </div>
-      <div class="two-col">
-        <div class="col-form">
-          <div class="sec-title">오늘 입력</div>
-          <a id="naver-review-btn" href="#" target="_blank" class="naver-btn" style="text-decoration:none;margin-bottom:16px;">
-            <span class="naver-btn-icon">🔗</span><span>네이버 영수증 리뷰 확인</span>
-            <span style="margin-left:auto;font-size:11px;color:var(--text3);">→</span>
-          </a>
-          <div class="form-group"><label class="form-label">날짜</label><input class="form-input" type="date" id="rv-date"></div>
-          <div class="input-row" style="margin-bottom:16px;">
-            <div><label class="form-label">결제 건수</label><input class="form-input" type="number" id="rv-pay" min="0" placeholder="0"></div>
-            <div><label class="form-label">리뷰 건수</label><input class="form-input" type="number" id="rv-rev" min="0" placeholder="0"></div>
-          </div>
-          <button class="btn-primary" onclick="addReview()">등록</button>
-        </div>
-        <div class="col-list">
-          <div class="review-stat-card">
-            <div><div class="review-stat-val" id="rv-total-pay">0</div><div class="review-stat-label">총 결제</div></div>
-            <div><div class="review-stat-val" id="rv-total-rev">0</div><div class="review-stat-label">리뷰 획득</div></div>
-            <div><div class="review-stat-val" id="rv-rate">0%</div><div class="review-stat-label">전환율 (목표 30%)</div></div>
-            <div class="review-rate-bar"><div class="review-rate-fill" id="rv-bar" style="width:0%;background:var(--green);"></div></div>
-          </div>
-          <div class="sec-title">최근 기록</div>
-          <div id="rv-list"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ 제휴 할인 ══ -->
-  <div class="view" id="view-discount">
-    <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
-      <div class="view-header">
-        <div class="view-title">🏷 제휴 할인</div>
-        <div class="view-kpi-row">
-          <div class="view-kpi" style="border-top:2px solid var(--purple);"><div class="view-kpi-val" id="disc-month-count" style="color:var(--purple);">0</div><div class="view-kpi-label">이번 달</div></div>
-          <div class="view-kpi"><div class="view-kpi-val" id="disc-month-amt" style="font-size:16px;">—</div><div class="view-kpi-label">할인 합계</div></div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <button class="month-nav-btn" onclick="changeMonth('discount',-1)">‹</button>
-            <span class="month-nav-label" id="disc-month-nav-label"></span>
-            <button class="month-nav-btn" onclick="changeMonth('discount',1)">›</button>
-            <button class="month-today-btn" onclick="goThisMonth('discount')">이번 달</button>
-          </div>
-        </div>
-      </div>
-      <div class="two-col">
-        <div class="col-form">
-          <div class="sec-title">할인 등록</div>
-          <div class="form-group"><label class="form-label">할인 유형</label>
-            <div class="disc-type-row">
-              <button class="disc-type-btn sel-runcop" data-t="runcop" onclick="setDiscType('runcop',this)">런콥 할인</button>
-              <button class="disc-type-btn" data-t="brand" onclick="setDiscType('brand',this)">브랜드 관계자</button>
-            </div>
-          </div>
-          <div class="form-group"><label class="form-label">날짜</label><input class="form-input" type="date" id="disc-date"></div>
-          <div class="form-group"><label class="form-label">제품명</label><input class="form-input" type="text" id="disc-product" placeholder="예: 호카 본디 9 265"></div>
-          <div class="input-row" style="margin-bottom:4px;">
-            <div><label class="form-label">정가 (원)</label><input class="form-input" type="number" id="disc-orig" placeholder="0" oninput="calcDisc()"></div>
-            <div><label class="form-label">할인율 (%)</label><input class="form-input" type="number" id="disc-rate" placeholder="0" min="0" max="100" oninput="calcDisc()"></div>
-          </div>
-          <div class="disc-preview" id="disc-preview"></div>
-          <div style="margin-top:16px;"><button class="btn-primary" onclick="addDiscount()">등록</button></div>
-        </div>
-        <div class="col-list">
-          <div class="sec-title">최근 내역</div>
-          <div id="disc-list"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ SNS 유입 ══ -->
-  <div class="view" id="view-sns">
-    <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
-      <div class="view-header">
-        <div class="view-title">📱 SNS 유입</div>
-        <div class="view-kpi-row">
-          <div class="view-kpi" style="border-top:2px solid var(--pink);">
-            <div class="view-kpi-val" id="sns-today-inflow" style="color:var(--pink);">0</div>
-            <div class="view-kpi-label">오늘 유입</div>
-          </div>
-          <div class="view-kpi">
-            <div class="view-kpi-val" id="sns-today-purchase">0</div>
-            <div class="view-kpi-label">오늘 구매</div>
-          </div>
-          <div class="view-kpi" style="border-top:2px solid var(--green);">
-            <div class="view-kpi-val" id="sns-today-amount" style="font-size:15px;color:var(--green);">—</div>
-            <div class="view-kpi-label">오늘 구매금액</div>
-          </div>
-          <div class="view-kpi" style="border-top:2px solid var(--purple);">
-            <div class="view-kpi-val" id="sns-month-inflow" style="color:var(--purple);">0</div>
-            <div class="view-kpi-label">이번 달 유입</div>
-          </div>
-          <div class="view-kpi">
-            <div class="view-kpi-val" id="sns-month-amount" style="font-size:14px;">—</div>
-            <div class="view-kpi-label">이번 달 구매금액</div>
-          </div>
-        </div>
-      </div>
-      <div class="two-col">
-
-        <!-- 왼쪽: 진행 중인 이벤트 + 빠른 카운트 -->
-        <div class="col-form">
-          <div class="sec-title">진행 중인 SNS 이벤트</div>
-          <div id="sns-event-cards"></div>
-
-          <!-- 미기록 유입 (이벤트 없이) -->
-          <div style="margin-top:20px;">
-            <div class="sec-title">이벤트 없는 일반 유입</div>
-            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;box-shadow:var(--sh);">
-              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                <span style="font-size:13px;font-weight:600;">일반 SNS 유입</span>
-                <div style="display:flex;align-items:center;gap:8px;">
-                  <button class="icon-btn" onclick="quickCount('general','inflow',-1)">−</button>
-                  <span id="general-inflow-count" style="font-family:'Bebas Neue',sans-serif;font-size:22px;min-width:32px;text-align:center;">0</span>
-                  <button class="icon-btn" onclick="quickCount('general','inflow',1)" style="background:var(--pink-l);color:var(--pink);border-color:rgba(225,29,72,.2);">+</button>
-                </div>
-              </div>
-              <button class="btn-primary" onclick="saveSnsEntry('general')" style="font-size:12px;padding:8px;">등록</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 오른쪽: 오늘 기록 목록 -->
-        <div class="col-list">
-          <div class="sec-title">오늘 유입 기록</div>
-          <div id="sns-list"></div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ 현금 시재 ══ -->
-  <div class="view" id="view-cash">
-    <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
-      <div class="view-header">
-        <div class="view-title">💰 현금 시재</div>
-        <div class="view-kpi-row">
-          <div class="view-kpi" style="border-top:2px solid var(--accent);">
-            <div class="view-kpi-val" id="cash-total-display" style="font-size:15px;color:var(--accent);">—</div>
-            <div class="view-kpi-label" id="cash-type-label">합계</div>
-          </div>
-          <div class="view-kpi" style="border-top:2px solid var(--amber);">
-            <div class="view-kpi-val" id="cash-deposit-display" style="font-size:15px;color:var(--amber);">—</div>
-            <div class="view-kpi-label">입금액</div>
-          </div>
-          <div class="view-kpi" style="border-top:2px solid var(--green);">
-            <div class="view-kpi-val" id="cash-remain-display" style="font-size:15px;color:var(--green);">—</div>
-            <div class="view-kpi-label">보관 (1,000,000원)</div>
-          </div>
-        </div>
-      </div>
-      <div class="two-col">
-        <div class="col-form" style="width:420px;">
-          <!-- 마감/오픈 탭 -->
-          <div style="display:flex;gap:8px;margin-bottom:16px;">
-            <button id="cash-tab-close" onclick="setCashType('마감',this)"
-              style="flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--accent);background:var(--accent-l);color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;">
+</div>
+<div id="pi-list"></div>
+</div>
+</div>
+</div>
+</div><div class="view" id="view-review">
+<div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+<div class="view-header">
+<div class="view-title">⭐ 리뷰 트래커</div>
+<div class="view-kpi-row">
+<div style="display:flex;align-items:center;gap:6px;">
+<button class="month-nav-btn" onclick="changeMonth('review',-1)">‹</button>
+<span class="month-nav-label" id="rv-month-nav-label"></span>
+<button class="month-nav-btn" onclick="changeMonth('review',1)">›</button>
+<button class="month-today-btn" onclick="goThisMonth('review')">이번 달</button>
+</div>
+</div>
+</div>
+<div class="two-col">
+<div class="col-form">
+<div class="sec-title">오늘 입력</div>
+<a class="naver-btn" href="#" id="naver-review-btn" style="text-decoration:none;margin-bottom:16px;" target="_blank">
+<span class="naver-btn-icon">🔗</span><span>네이버 영수증 리뷰 확인</span>
+<span style="margin-left:auto;font-size:11px;color:var(--text3);">→</span>
+</a>
+<div class="form-group"><label class="form-label">날짜</label><input class="form-input" id="rv-date" type="date"/></div>
+<div class="input-row" style="margin-bottom:16px;">
+<div><label class="form-label">결제 건수</label><input class="form-input" id="rv-pay" min="0" placeholder="0" type="number"/></div>
+<div><label class="form-label">리뷰 건수</label><input class="form-input" id="rv-rev" min="0" placeholder="0" type="number"/></div>
+</div>
+<button class="btn-primary" onclick="addReview()">등록</button>
+</div>
+<div class="col-list">
+<div class="review-stat-card">
+<div><div class="review-stat-val" id="rv-total-pay">0</div><div class="review-stat-label">총 결제</div></div>
+<div><div class="review-stat-val" id="rv-total-rev">0</div><div class="review-stat-label">리뷰 획득</div></div>
+<div><div class="review-stat-val" id="rv-rate">0%</div><div class="review-stat-label">전환율 (목표 30%)</div></div>
+<div class="review-rate-bar"><div class="review-rate-fill" id="rv-bar" style="width:0%;background:var(--green);"></div></div>
+</div>
+<div class="sec-title">최근 기록</div>
+<div id="rv-list"></div>
+</div>
+</div>
+</div>
+</div><div class="view" id="view-discount">
+<div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+<div class="view-header">
+<div class="view-title">🏷 제휴 할인</div>
+<div class="view-kpi-row">
+<div class="view-kpi" style="border-top:2px solid var(--purple);"><div class="view-kpi-val" id="disc-month-count" style="color:var(--purple);">0</div><div class="view-kpi-label">이번 달</div></div>
+<div class="view-kpi"><div class="view-kpi-val" id="disc-month-amt" style="font-size:16px;">—</div><div class="view-kpi-label">할인 합계</div></div>
+<div style="display:flex;align-items:center;gap:6px;">
+<button class="month-nav-btn" onclick="changeMonth('discount',-1)">‹</button>
+<span class="month-nav-label" id="disc-month-nav-label"></span>
+<button class="month-nav-btn" onclick="changeMonth('discount',1)">›</button>
+<button class="month-today-btn" onclick="goThisMonth('discount')">이번 달</button>
+</div>
+</div>
+</div>
+<div class="two-col">
+<div class="col-form">
+<div class="sec-title">할인 등록</div>
+<div class="form-group"><label class="form-label">할인 유형</label>
+<div class="disc-type-row">
+<button class="disc-type-btn sel-runcop" data-t="runcop" onclick="setDiscType('runcop',this)">런콥 할인</button>
+<button class="disc-type-btn" data-t="brand" onclick="setDiscType('brand',this)">브랜드 관계자</button>
+</div>
+</div>
+<div class="form-group"><label class="form-label">날짜</label><input class="form-input" id="disc-date" type="date"/></div>
+<div class="form-group"><label class="form-label">제품명</label><input class="form-input" id="disc-product" placeholder="예: 호카 본디 9 265" type="text"/></div>
+<div class="input-row" style="margin-bottom:4px;">
+<div><label class="form-label">정가 (원)</label><input class="form-input" id="disc-orig" oninput="calcDisc()" placeholder="0" type="number"/></div>
+<div><label class="form-label">할인율 (%)</label><input class="form-input" id="disc-rate" max="100" min="0" oninput="calcDisc()" placeholder="0" type="number"/></div>
+</div>
+<div class="disc-preview" id="disc-preview"></div>
+<div style="margin-top:16px;"><button class="btn-primary" onclick="addDiscount()">등록</button></div>
+</div>
+<div class="col-list">
+<div class="sec-title">최근 내역</div>
+<div id="disc-list"></div>
+</div>
+</div>
+</div>
+</div><div class="view" id="view-sns">
+<div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+<div class="view-header">
+<div class="view-title">📱 SNS 유입</div>
+<div class="view-kpi-row">
+<div class="view-kpi" style="border-top:2px solid var(--pink);">
+<div class="view-kpi-val" id="sns-today-inflow" style="color:var(--pink);">0</div>
+<div class="view-kpi-label">오늘 유입</div>
+</div>
+<div class="view-kpi">
+<div class="view-kpi-val" id="sns-today-purchase">0</div>
+<div class="view-kpi-label">오늘 구매</div>
+</div>
+<div class="view-kpi" style="border-top:2px solid var(--green);">
+<div class="view-kpi-val" id="sns-today-amount" style="font-size:15px;color:var(--green);">—</div>
+<div class="view-kpi-label">오늘 구매금액</div>
+</div>
+<div class="view-kpi" style="border-top:2px solid var(--purple);">
+<div class="view-kpi-val" id="sns-month-inflow" style="color:var(--purple);">0</div>
+<div class="view-kpi-label">이번 달 유입</div>
+</div>
+<div class="view-kpi">
+<div class="view-kpi-val" id="sns-month-amount" style="font-size:14px;">—</div>
+<div class="view-kpi-label">이번 달 구매금액</div>
+</div>
+</div>
+</div>
+<div class="two-col">
+<!-- 왼쪽: 진행 중인 이벤트 + 빠른 카운트 -->
+<div class="col-form">
+<div class="sec-title">진행 중인 SNS 이벤트</div>
+<div id="sns-event-cards"></div>
+<!-- 미기록 유입 (이벤트 없이) -->
+<div style="margin-top:20px;">
+<div class="sec-title">이벤트 없는 일반 유입</div>
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;box-shadow:var(--sh);">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+<span style="font-size:13px;font-weight:600;">일반 SNS 유입</span>
+<div style="display:flex;align-items:center;gap:8px;">
+<button class="icon-btn" onclick="quickCount('general','inflow',-1)">−</button>
+<span id="general-inflow-count" style="font-family:'Bebas Neue',sans-serif;font-size:22px;min-width:32px;text-align:center;">0</span>
+<button class="icon-btn" onclick="quickCount('general','inflow',1)" style="background:var(--pink-l);color:var(--pink);border-color:rgba(225,29,72,.2);">+</button>
+</div>
+</div>
+<button class="btn-primary" onclick="saveSnsEntry('general')" style="font-size:12px;padding:8px;">등록</button>
+</div>
+</div>
+</div>
+<!-- 오른쪽: 오늘 기록 목록 -->
+<div class="col-list">
+<div class="sec-title">오늘 유입 기록</div>
+<div id="sns-list"></div>
+</div>
+</div>
+</div>
+</div><div class="view" id="view-cash">
+<div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+<div class="view-header">
+<div class="view-title">💰 현금 시재</div>
+<div class="view-kpi-row">
+<div class="view-kpi" style="border-top:2px solid var(--accent);">
+<div class="view-kpi-val" id="cash-total-display" style="font-size:15px;color:var(--accent);">—</div>
+<div class="view-kpi-label" id="cash-type-label">합계</div>
+</div>
+<div class="view-kpi" style="border-top:2px solid var(--amber);">
+<div class="view-kpi-val" id="cash-deposit-display" style="font-size:15px;color:var(--amber);">—</div>
+<div class="view-kpi-label">입금액</div>
+</div>
+<div class="view-kpi" style="border-top:2px solid var(--green);">
+<div class="view-kpi-val" id="cash-remain-display" style="font-size:15px;color:var(--green);">—</div>
+<div class="view-kpi-label">보관 (1,000,000원)</div>
+</div>
+</div>
+</div>
+<div class="two-col">
+<div class="col-form" style="width:420px;">
+<!-- 마감/오픈 탭 -->
+<div style="display:flex;gap:8px;margin-bottom:16px;">
+<button id="cash-tab-close" onclick="setCashType('마감',this)" style="flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--accent);background:var(--accent-l);color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;">
               🌙 마감
             </button>
-            <button id="cash-tab-open" onclick="setCashType('오픈',this)"
-              style="flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;">
+<button id="cash-tab-open" onclick="setCashType('오픈',this)" style="flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;">
               ☀️ 오픈
             </button>
-          </div>
-
-          <!-- 편의 버튼 -->
-          <div style="display:flex;gap:8px;margin-bottom:16px;">
-            <button onclick="loadPrevCashQty()"
-              style="flex:1;padding:8px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;">
+</div>
+<!-- 편의 버튼 -->
+<div style="display:flex;gap:8px;margin-bottom:16px;">
+<button onclick="loadPrevCashQty()" style="flex:1;padding:8px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;">
               📋 전일 수량 불러오기
             </button>
-            <button onclick="calcDeposit()"
-              style="flex:1;padding:8px;border-radius:var(--r);border:1px solid var(--amber);background:var(--amber-l);color:var(--amber);font-size:12px;font-weight:700;cursor:pointer;">
+<button onclick="calcDeposit()" style="flex:1;padding:8px;border-radius:var(--r);border:1px solid var(--amber);background:var(--amber-l);color:var(--amber);font-size:12px;font-weight:700;cursor:pointer;">
               💸 입금액 계산
             </button>
-          </div>
+</div>
+<!-- 권종별 입력 -->
+<div class="sec-title">권종별 장수 입력</div>
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh);margin-bottom:16px;">
+<div style="display:grid;grid-template-columns:80px 1fr 1fr;background:var(--surface2);border-bottom:1px solid var(--border);padding:8px 14px;">
+<span style="font-size:11px;font-weight:700;color:var(--text3);">권종</span>
+<span style="font-size:11px;font-weight:700;color:var(--text3);text-align:center;">장수</span>
+<span style="font-size:11px;font-weight:700;color:var(--text3);text-align:right;">금액</span>
+</div>
+<div id="cash-denom-rows"></div>
+<div style="display:grid;grid-template-columns:80px 1fr 1fr;padding:10px 14px;background:var(--accent-l);border-top:2px solid var(--accent);">
+<span style="font-size:13px;font-weight:700;color:var(--accent);">합계</span>
+<span></span>
+<span id="cash-total-row" style="font-size:14px;font-weight:700;color:var(--accent);text-align:right;">0원</span>
+</div>
+</div>
+<!-- 비고 + 저장 -->
+<div class="form-group">
+<label class="form-label">비고 (선택)</label>
+<input class="form-input" id="cash-memo" placeholder="특이사항..." type="text"/>
+</div>
+<button class="btn-primary" onclick="saveCash()">저장</button>
+</div>
+<div class="col-list">
+<div class="sec-title">최근 시재 기록</div>
+<div id="cash-list"></div>
+</div>
+</div>
+</div>
+</div><div class="view" id="view-schedule">
+<div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+<div class="view-header">
+<div class="view-title">📋 스케줄</div>
+<div class="view-kpi-row">
+<div class="cal-header-nav">
+<button class="cal-nav-btn" onclick="schPrev()">‹</button>
+<div class="cal-title-label" id="sch-title"></div>
+<button class="cal-nav-btn" onclick="schNext()">›</button>
+<button class="cal-today-btn" onclick="schToday()">이번 달</button>
+</div>
+</div>
+</div>
+<div style="flex:1;overflow-y:auto;padding:20px 24px;">
+<div class="sec-title">월간 스케줄</div>
+<div class="sch-table-wrap"><table class="sch-table" id="sch-table"></table></div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+<span class="sch-cell S-출근">출근</span>
+<span class="sch-cell S-휴무">휴무</span>
+<span class="sch-cell S-대휴">대휴(전)</span>
+<span class="sch-cell S-대휴반">대휴(반)</span>
+<span class="sch-cell S-연차">연차</span>
+<span style="font-size:11px;color:var(--text3);margin-left:4px;align-self:center;">점선=희망 / 실선=확정</span>
+</div>
+<div class="sec-title">대휴 현황</div>
+<div id="dayoff-list"></div>
+</div>
+</div>
+</div><div class="view" id="view-calendar">
+<div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+<div class="view-header">
+<div class="view-title">📅 일정</div>
+<div class="view-kpi-row">
+<div class="cal-header-nav">
+<button class="cal-nav-btn" onclick="calPrev()">‹</button>
+<div class="cal-title-label" id="cal-title"></div>
+<button class="cal-nav-btn" onclick="calNext()">›</button>
+<button class="cal-today-btn" onclick="calToday()">오늘</button>
+</div>
+</div>
+</div>
+<div class="two-col">
+<div class="col-form" style="width:340px;">
+<div class="sec-title">일정 등록</div>
+<div class="form-group"><label class="form-label">카테고리</label><div class="cal-cat-row" id="cal-cats"></div></div>
+<div class="input-row" style="margin-bottom:12px;">
+<div><label class="form-label">시작일</label><input class="form-input" id="cal-start" type="date"/></div>
+<div><label class="form-label">종료일 (선택)</label><input class="form-input" id="cal-end" type="date"/></div>
+</div>
+<div class="form-group"><label class="form-label">제목</label><input class="form-input" id="cal-title-input" placeholder="예: 호카 팝업, 런세션 #12..." type="text"/></div>
+<div class="form-group"><label class="form-label">메모 (선택)</label><input class="form-input" id="cal-memo" placeholder="장소, 준비사항..." type="text"/></div>
+<!-- SNS 이벤트 전용 필드 -->
+<div id="cal-sns-fields" style="display:none;">
+<div class="form-group"><label class="form-label">목표 참여자 수</label><input class="form-input" id="cal-sns-goal" min="0" placeholder="0" type="number"/></div>
+<div class="form-group"><label class="form-label">인스타 게시물 URL</label><input class="form-input" id="cal-sns-url" placeholder="https://instagram.com/p/..." type="url"/></div>
+</div>
+<button class="btn-primary" onclick="addCalEvent()">등록</button>
+</div>
+<div class="col-list">
+<div class="cal-grid-wrap">
+<div class="cal-dow-row">
+<div class="cal-dow">일</div><div class="cal-dow">월</div><div class="cal-dow">화</div>
+<div class="cal-dow">수</div><div class="cal-dow">목</div><div class="cal-dow">금</div><div class="cal-dow">토</div>
+</div>
+<div class="cal-days" id="cal-grid"></div>
+</div>
+<div class="sec-title">이번 달 일정</div>
+<div id="cal-month-list"></div>
+</div>
+</div>
+</div>
+</div></main>
+<!-- ══ 홈 ══ -->
 
-          <!-- 권종별 입력 -->
-          <div class="sec-title">권종별 장수 입력</div>
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh);margin-bottom:16px;">
-            <div style="display:grid;grid-template-columns:80px 1fr 1fr;background:var(--surface2);border-bottom:1px solid var(--border);padding:8px 14px;">
-              <span style="font-size:11px;font-weight:700;color:var(--text3);">권종</span>
-              <span style="font-size:11px;font-weight:700;color:var(--text3);text-align:center;">장수</span>
-              <span style="font-size:11px;font-weight:700;color:var(--text3);text-align:right;">금액</span>
-            </div>
-            <div id="cash-denom-rows"></div>
-            <div style="display:grid;grid-template-columns:80px 1fr 1fr;padding:10px 14px;background:var(--accent-l);border-top:2px solid var(--accent);">
-              <span style="font-size:13px;font-weight:700;color:var(--accent);">합계</span>
-              <span></span>
-              <span id="cash-total-row" style="font-size:14px;font-weight:700;color:var(--accent);text-align:right;">0원</span>
-            </div>
-          </div>
+<!-- ══ 미구매 이슈 ══ -->
 
-          <!-- 비고 + 저장 -->
-          <div class="form-group">
-            <label class="form-label">비고 (선택)</label>
-            <input class="form-input" type="text" id="cash-memo" placeholder="특이사항...">
-          </div>
-          <button class="btn-primary" onclick="saveCash()">저장</button>
-        </div>
-        <div class="col-list">
-          <div class="sec-title">최근 시재 기록</div>
-          <div id="cash-list"></div>
-        </div>
-      </div>
-    </div>
-  </div>
+<!-- ══ 매장 이슈 ══ -->
 
-  <!-- ══ 스케줄 ══ -->
-  <div class="view" id="view-schedule">
-    <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
-      <div class="view-header">
-        <div class="view-title">📋 스케줄</div>
-        <div class="view-kpi-row">
-          <div class="cal-header-nav">
-            <button class="cal-nav-btn" onclick="schPrev()">‹</button>
-            <div class="cal-title-label" id="sch-title"></div>
-            <button class="cal-nav-btn" onclick="schNext()">›</button>
-            <button class="cal-today-btn" onclick="schToday()">이번 달</button>
-          </div>
-        </div>
-      </div>
-      <div style="flex:1;overflow-y:auto;padding:20px 24px;">
-        <div class="sec-title">월간 스케줄</div>
-        <div class="sch-table-wrap"><table class="sch-table" id="sch-table"></table></div>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
-          <span class="sch-cell S-출근">출근</span>
-          <span class="sch-cell S-휴무">휴무</span>
-          <span class="sch-cell S-대휴">대휴(전)</span>
-          <span class="sch-cell S-대휴반">대휴(반)</span>
-          <span class="sch-cell S-연차">연차</span>
-          <span style="font-size:11px;color:var(--text3);margin-left:4px;align-self:center;">점선=희망 / 실선=확정</span>
-        </div>
-        <div class="sec-title">대휴 현황</div>
-        <div id="dayoff-list"></div>
-      </div>
-    </div>
-  </div>
+<!-- ══ 제품 이슈 ══ -->
 
-  <!-- 스케줄 입력 모달 -->
-  <div class="modal-overlay" id="sch-modal" onclick="if(event.target===this)schModalClose()">
-    <div class="modal-box">
-      <div class="modal-header">
-        <div class="modal-title" id="sch-modal-title">스케줄 입력</div>
-        <button class="modal-close" onclick="schModalClose()">✕</button>
-      </div>
-      <div style="font-size:13px;color:var(--text3);margin-bottom:16px;" id="sch-modal-info"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
-        <button class="sch-modal-btn" onclick="setSchType('출근')" style="padding:14px;border-radius:var(--r);border:1.5px solid #16A34A;background:#DCFCE7;color:#16A34A;font-size:14px;font-weight:700;cursor:pointer;">출근</button>
-        <button class="sch-modal-btn" onclick="setSchType('휴무')" style="padding:14px;border-radius:var(--r);border:1.5px solid #94A3B8;background:#F1F5F9;color:#64748B;font-size:14px;font-weight:700;cursor:pointer;">휴무</button>
-        <button class="sch-modal-btn" onclick="setSchType('대휴')" style="padding:14px;border-radius:var(--r);border:1.5px solid #7C3AED;background:#F3E8FF;color:#7C3AED;font-size:14px;font-weight:700;cursor:pointer;">대휴 (전일)</button>
-        <button class="sch-modal-btn" onclick="setSchType('대휴반')" style="padding:14px;border-radius:var(--r);border:1.5px solid #7C3AED;background:#EDE9FE;color:#7C3AED;font-size:14px;font-weight:700;cursor:pointer;">대휴 (반일)</button>
-        <button class="sch-modal-btn" onclick="setSchType('연차')" style="padding:14px;border-radius:var(--r);border:1.5px solid #DC2626;background:#FEF2F2;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;">연차</button>
-        <button class="sch-modal-btn" onclick="setSchType('')" style="padding:14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text3);font-size:14px;font-weight:700;cursor:pointer;">비우기</button>
-      </div>
-      <div id="sch-confirm-row" style="display:none;margin-bottom:16px;">
-        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
-          <input type="checkbox" id="sch-confirm-check" style="width:16px;height:16px;cursor:pointer;">
-          <span>확정 처리 (점장)</span>
-        </label>
-      </div>
-      <div class="modal-actions">
-        <button class="btn-primary" onclick="saveSchCell()" style="flex:1;">저장</button>
-        <button class="btn-ghost" onclick="schModalClose()">취소</button>
-      </div>
-    </div>
-  </div>
+<!-- ══ 리뷰 트래커 ══ -->
 
-  <!-- 대휴 모달 -->
-  <div class="modal-overlay" id="dayoff-modal" onclick="if(event.target===this)dayoffModalClose()">
-    <div class="modal-box">
-      <div class="modal-header">
-        <div class="modal-title" id="dayoff-modal-title">대휴 내역</div>
-        <button class="modal-close" onclick="dayoffModalClose()">✕</button>
-      </div>
-      <div class="form-group">
-        <label class="form-label">구분</label>
-        <div style="display:flex;gap:8px;">
-          <button id="dayoff-type-earn" onclick="setDayoffType('적립',this)" style="flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--green);background:var(--green-l);color:var(--green);font-size:13px;font-weight:700;cursor:pointer;">▲ 적립</button>
-          <button id="dayoff-type-use" onclick="setDayoffType('사용',this)" style="flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;">▼ 사용</button>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">시간</label>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;" id="dayoff-hour-btns">
-          <button class="dayoff-h-btn" onclick="setDayoffHour(1,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">1시간</button>
-          <button class="dayoff-h-btn" onclick="setDayoffHour(2,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">2시간</button>
-          <button class="dayoff-h-btn" onclick="setDayoffHour(3,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">3시간</button>
-          <button class="dayoff-h-btn" onclick="setDayoffHour(4,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">4시간</button>
-          <button class="dayoff-h-btn" onclick="setDayoffHour(8,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">8시간(1일)</button>
-        </div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">메모 (선택)</label>
-        <input class="form-input" type="text" id="dayoff-memo" placeholder="예: 일요일 행사 참여">
-      </div>
-      <div class="modal-actions">
-        <button class="btn-primary" onclick="saveDayoff()" style="flex:1;">저장</button>
-        <button class="btn-ghost" onclick="dayoffModalClose()">취소</button>
-      </div>
-    </div>
-  </div>
+<!-- ══ 제휴 할인 ══ -->
+
+<!-- ══ SNS 유입 ══ -->
+
+<!-- ══ 현금 시재 ══ -->
+
+<!-- ══ 스케줄 ══ -->
+
+<!-- 스케줄 입력 모달 -->
+
+<!-- 대휴 모달 -->
 
 <!-- ══ 일정 ══ -->
-  <div class="view" id="view-calendar">
-    <div style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
-      <div class="view-header">
-        <div class="view-title">📅 일정</div>
-        <div class="view-kpi-row">
-          <div class="cal-header-nav">
-            <button class="cal-nav-btn" onclick="calPrev()">‹</button>
-            <div class="cal-title-label" id="cal-title"></div>
-            <button class="cal-nav-btn" onclick="calNext()">›</button>
-            <button class="cal-today-btn" onclick="calToday()">오늘</button>
-          </div>
-        </div>
-      </div>
-      <div class="two-col">
-        <div class="col-form" style="width:340px;">
-          <div class="sec-title">일정 등록</div>
-          <div class="form-group"><label class="form-label">카테고리</label><div class="cal-cat-row" id="cal-cats"></div></div>
-          <div class="input-row" style="margin-bottom:12px;">
-            <div><label class="form-label">시작일</label><input class="form-input" type="date" id="cal-start"></div>
-            <div><label class="form-label">종료일 (선택)</label><input class="form-input" type="date" id="cal-end"></div>
-          </div>
-          <div class="form-group"><label class="form-label">제목</label><input class="form-input" type="text" id="cal-title-input" placeholder="예: 호카 팝업, 런세션 #12..."></div>
-          <div class="form-group"><label class="form-label">메모 (선택)</label><input class="form-input" type="text" id="cal-memo" placeholder="장소, 준비사항..."></div>
-          <!-- SNS 이벤트 전용 필드 -->
-          <div id="cal-sns-fields" style="display:none;">
-            <div class="form-group"><label class="form-label">목표 참여자 수</label><input class="form-input" type="number" id="cal-sns-goal" placeholder="0" min="0"></div>
-            <div class="form-group"><label class="form-label">인스타 게시물 URL</label><input class="form-input" type="url" id="cal-sns-url" placeholder="https://instagram.com/p/..."></div>
-          </div>
-          <button class="btn-primary" onclick="addCalEvent()">등록</button>
-        </div>
-        <div class="col-list">
-          <div class="cal-grid-wrap">
-            <div class="cal-dow-row">
-              <div class="cal-dow">일</div><div class="cal-dow">월</div><div class="cal-dow">화</div>
-              <div class="cal-dow">수</div><div class="cal-dow">목</div><div class="cal-dow">금</div><div class="cal-dow">토</div>
-            </div>
-            <div class="cal-days" id="cal-grid"></div>
-          </div>
-          <div class="sec-title">이번 달 일정</div>
-          <div id="cal-month-list"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
+<div class="modal-overlay" id="sch-modal" onclick="if(event.target===this)schModalClose()">
+<div class="modal-box">
+<div class="modal-header">
+<div class="modal-title" id="sch-modal-title">스케줄 입력</div>
+<button class="modal-close" onclick="schModalClose()">✕</button>
+</div>
+<div id="sch-modal-info" style="font-size:13px;color:var(--text3);margin-bottom:16px;"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+<button class="sch-modal-btn" onclick="setSchType('출근')" style="padding:14px;border-radius:var(--r);border:1.5px solid #16A34A;background:#DCFCE7;color:#16A34A;font-size:14px;font-weight:700;cursor:pointer;">출근</button>
+<button class="sch-modal-btn" onclick="setSchType('휴무')" style="padding:14px;border-radius:var(--r);border:1.5px solid #94A3B8;background:#F1F5F9;color:#64748B;font-size:14px;font-weight:700;cursor:pointer;">휴무</button>
+<button class="sch-modal-btn" onclick="setSchType('대휴')" style="padding:14px;border-radius:var(--r);border:1.5px solid #7C3AED;background:#F3E8FF;color:#7C3AED;font-size:14px;font-weight:700;cursor:pointer;">대휴 (전일)</button>
+<button class="sch-modal-btn" onclick="setSchType('대휴반')" style="padding:14px;border-radius:var(--r);border:1.5px solid #7C3AED;background:#EDE9FE;color:#7C3AED;font-size:14px;font-weight:700;cursor:pointer;">대휴 (반일)</button>
+<button class="sch-modal-btn" onclick="setSchType('연차')" style="padding:14px;border-radius:var(--r);border:1.5px solid #DC2626;background:#FEF2F2;color:#DC2626;font-size:14px;font-weight:700;cursor:pointer;">연차</button>
+<button class="sch-modal-btn" onclick="setSchType('')" style="padding:14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text3);font-size:14px;font-weight:700;cursor:pointer;">비우기</button>
+</div>
+<div id="sch-confirm-row" style="display:none;margin-bottom:16px;">
+<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+<input id="sch-confirm-check" style="width:16px;height:16px;cursor:pointer;" type="checkbox"/>
+<span>확정 처리 (점장)</span>
+</label>
+</div>
+<div class="modal-actions">
+<button class="btn-primary" onclick="saveSchCell()" style="flex:1;">저장</button>
+<button class="btn-ghost" onclick="schModalClose()">취소</button>
+</div>
+</div>
+</div><div class="modal-overlay" id="dayoff-modal" onclick="if(event.target===this)dayoffModalClose()">
+<div class="modal-box">
+<div class="modal-header">
+<div class="modal-title" id="dayoff-modal-title">대휴 내역</div>
+<button class="modal-close" onclick="dayoffModalClose()">✕</button>
+</div>
+<div class="form-group">
+<label class="form-label">구분</label>
+<div style="display:flex;gap:8px;">
+<button id="dayoff-type-earn" onclick="setDayoffType('적립',this)" style="flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--green);background:var(--green-l);color:var(--green);font-size:13px;font-weight:700;cursor:pointer;">▲ 적립</button>
+<button id="dayoff-type-use" onclick="setDayoffType('사용',this)" style="flex:1;padding:10px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;">▼ 사용</button>
+</div>
+</div>
+<div class="form-group">
+<label class="form-label">시간</label>
+<div id="dayoff-hour-btns" style="display:flex;flex-wrap:wrap;gap:6px;">
+<button class="dayoff-h-btn" onclick="setDayoffHour(1,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">1시간</button>
+<button class="dayoff-h-btn" onclick="setDayoffHour(2,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">2시간</button>
+<button class="dayoff-h-btn" onclick="setDayoffHour(3,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">3시간</button>
+<button class="dayoff-h-btn" onclick="setDayoffHour(4,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">4시간</button>
+<button class="dayoff-h-btn" onclick="setDayoffHour(8,this)" style="padding:8px 14px;border-radius:var(--r);border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;">8시간(1일)</button>
+</div>
+</div>
+<div class="form-group">
+<label class="form-label">메모 (선택)</label>
+<input class="form-input" id="dayoff-memo" placeholder="예: 일요일 행사 참여" type="text"/>
+</div>
+<div class="modal-actions">
+<button class="btn-primary" onclick="saveDayoff()" style="flex:1;">저장</button>
+<button class="btn-ghost" onclick="dayoffModalClose()">취소</button>
+</div>
+</div>
+</div></div>
 <!-- 일정 수정 모달 -->
 <div class="modal-overlay" id="cal-modal" onclick="if(event.target===this)calModalClose()">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title" id="cal-modal-title">일정 수정</div>
-      <button class="modal-close" onclick="calModalClose()">✕</button>
-    </div>
-    <div class="form-group"><label class="form-label">카테고리</label><div class="cal-cat-row" id="modal-cal-cats"></div></div>
-    <div class="input-row" style="margin-bottom:12px;">
-      <div><label class="form-label">시작일</label><input class="form-input" type="date" id="modal-cal-start"></div>
-      <div><label class="form-label">종료일</label><input class="form-input" type="date" id="modal-cal-end"></div>
-    </div>
-    <div class="form-group"><label class="form-label">제목</label><input class="form-input" type="text" id="modal-cal-title"></div>
-    <div class="form-group"><label class="form-label">메모</label><input class="form-input" type="text" id="modal-cal-memo"></div>
-    <!-- SNS 이벤트 전용 (모달) -->
-    <div id="modal-sns-fields" style="display:none;">
-      <div class="form-group"><label class="form-label">목표 참여자 수</label><input class="form-input" type="number" id="modal-cal-sns-goal" min="0"></div>
-      <div class="form-group"><label class="form-label">인스타 URL</label><input class="form-input" type="url" id="modal-cal-sns-url"></div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-primary" onclick="saveCalEvent()" style="flex:1;">저장</button>
-      <button class="btn-danger" onclick="deleteCalEvent()">삭제</button>
-      <button class="btn-ghost" onclick="calModalClose()">취소</button>
-    </div>
-  </div>
+<div class="modal-box">
+<div class="modal-header">
+<div class="modal-title" id="cal-modal-title">일정 수정</div>
+<button class="modal-close" onclick="calModalClose()">✕</button>
 </div>
-
+<div class="form-group"><label class="form-label">카테고리</label><div class="cal-cat-row" id="modal-cal-cats"></div></div>
+<div class="input-row" style="margin-bottom:12px;">
+<div><label class="form-label">시작일</label><input class="form-input" id="modal-cal-start" type="date"/></div>
+<div><label class="form-label">종료일</label><input class="form-input" id="modal-cal-end" type="date"/></div>
+</div>
+<div class="form-group"><label class="form-label">제목</label><input class="form-input" id="modal-cal-title" type="text"/></div>
+<div class="form-group"><label class="form-label">메모</label><input class="form-input" id="modal-cal-memo" type="text"/></div>
+<!-- SNS 이벤트 전용 (모달) -->
+<div id="modal-sns-fields" style="display:none;">
+<div class="form-group"><label class="form-label">목표 참여자 수</label><input class="form-input" id="modal-cal-sns-goal" min="0" type="number"/></div>
+<div class="form-group"><label class="form-label">인스타 URL</label><input class="form-input" id="modal-cal-sns-url" type="url"/></div>
+</div>
+<div class="modal-actions">
+<button class="btn-primary" onclick="saveCalEvent()" style="flex:1;">저장</button>
+<button class="btn-danger" onclick="deleteCalEvent()">삭제</button>
+<button class="btn-ghost" onclick="calModalClose()">취소</button>
+</div>
+</div>
+</div>
 <script>
 // ══════════════════════════════════════
 // 설정
@@ -1305,7 +1268,7 @@ function fillStaff(){
 // 뷰 전환
 // ══════════════════════════════════════
 function switchView(name,navEl){
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('#main-content > .view, .layout > .view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const view=document.getElementById('view-'+name);
   if(view) view.classList.add('active');
